@@ -11,31 +11,16 @@ except ImportError:
 
 def garch_volatility(returns, horizon=10):
     if not ARCH_AVAILABLE:
-        # Fallback: rolling std
         vol = returns.rolling(horizon).std().iloc[-1]
         return np.array([vol] * horizon)
-
     scaled = returns * 100
-    model = arch_model(scaled, vol="Garch", p=1, q=1, dist="normal")
-    res = model.fit(disp="off", show_warning=False)
-
-    forecast = res.forecast(horizon=horizon)
-    vol = np.sqrt(forecast.variance.values[-1]) / 100  # rescale back
-
-    return vol
+    res = arch_model(scaled, vol="Garch", p=1, q=1, dist="normal").fit(disp="off", show_warning=False)
+    return np.sqrt(res.forecast(horizon=horizon).variance.values[-1]) / 100
 
 
 def garch_summary(returns):
     if not ARCH_AVAILABLE:
         return {"error": "arch package not installed"}
-
     scaled = returns * 100
-    model = arch_model(scaled, vol="Garch", p=1, q=1)
-    res = model.fit(disp="off", show_warning=False)
-
-    return {
-        "aic": res.aic,
-        "bic": res.bic,
-        "loglikelihood": res.loglikelihood,
-        "params": res.params.to_dict(),
-    }
+    res = arch_model(scaled, vol="Garch", p=1, q=1).fit(disp="off", show_warning=False)
+    return {"aic": res.aic, "bic": res.bic, "loglikelihood": res.loglikelihood, "params": res.params.to_dict()}
