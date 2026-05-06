@@ -2,7 +2,7 @@
 
 > **Multi-Model FX Forecasting Engine** · Statistical + Deep Learning + Hybrid Models
 
-[![CI](https://github.com/YOUR_USERNAME/sammy-quant-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/SamOliverAreh/sammy-quant-lab/actions)
+[![CI](https://github.com/SamOliverAreh/sammy-quant-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/SamOliverAreh/sammy-quant-lab/actions)
 [![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11-blue)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/dashboard-Streamlit-FF4B4B)](https://streamlit.io)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
