@@ -1,4 +1,4 @@
-""
+"""
 Data ingestion — fetches OHLCV data from yfinance.
 Covers: FX, Commodities, Indices, Stocks (Global + MY), Crypto.
 """
