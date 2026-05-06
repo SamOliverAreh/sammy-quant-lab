@@ -9,7 +9,7 @@
 
 A production-grade quantitative finance platform for **FX time series forecasting**, combining classical econometrics with modern deep learning. Built as a portfolio project demonstrating end-to-end data science skills in financial markets.
 
-🌐 **[Live Demo →](https://your-app.streamlit.app)**
+🌐 **[Live Demo →](https://sammy-quant-lab.streamlit.app/)**
 
 ---
 
@@ -188,8 +188,8 @@ This project is for **educational and portfolio purposes only**. Nothing here co
 - Data pipeline engineering
 - ML model deployment
 
-[![GitHub](https://img.shields.io/badge/GitHub-YOUR_USERNAME-181717?logo=github)](https://github.com/YOUR_USERNAME)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0077B5?logo=linkedin)](https://linkedin.com/in/YOUR_PROFILE)
+[![GitHub](https://img.shields.io/badge/GitHub-YOUR_USERNAME-181717?logo=github)](https://github.com/SamOliverAreh)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0077B5?logo=linkedin)](https://www.linkedin.com/in/sam-oliver-areh/)
 
 ---
 
