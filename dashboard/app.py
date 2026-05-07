@@ -4,7 +4,7 @@ Mobile-first · Multi-asset · IC-based automatic model selection
 AIC / BIC / Log-Likelihood computed for ALL models → best auto-selected for forecast
 """
 import sys, os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(**file**), “..”)))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(**file**), "..")))
 
 import streamlit as st
 import plotly.graph_objects as go
