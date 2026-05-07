@@ -60,3 +60,4 @@ def forecast_xgboost(model, series: pd.Series, steps: int = 30, lags: int = 20) 
         preds.append(p)
         history.append(p)
     return np.array(preds)
+    
