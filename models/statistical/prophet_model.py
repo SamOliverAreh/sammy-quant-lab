@@ -55,3 +55,4 @@ def prophet_forecast(series: pd.Series, steps: int = 30, freq: str = "B") -> tup
     upper = future_fc["yhat_upper"].values
 
     return pred, lower, upper, future_fc[["ds", "yhat", "yhat_lower", "yhat_upper", "trend"]]
+    
