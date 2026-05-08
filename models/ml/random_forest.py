@@ -1,6 +1,4 @@
-"""
-Random Forest forecasting via recursive multi-step prediction.
-"""
+"""Random Forest — multivariate recursive forecasting on log-returns."""
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
@@ -8,7 +6,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
-def _make_features(series: pd.Series, lags: int = 20) -> tuple:
+def _make_features(series, lags=20, exog=None):
     df = pd.DataFrame({"y": series.values})
     for i in range(1, lags + 1):
         df[f"lag_{i}"] = df["y"].shift(i)
@@ -16,37 +14,38 @@ def _make_features(series: pd.Series, lags: int = 20) -> tuple:
     df["roll_mean_10"] = df["y"].shift(1).rolling(10).mean()
     df["roll_std_5"]   = df["y"].shift(1).rolling(5).std()
     df["roll_std_10"]  = df["y"].shift(1).rolling(10).std()
+    if exog is not None:
+        for col in exog.columns:
+            df[col] = exog[col].values[:len(df)]
     df.dropna(inplace=True)
     X = df.drop(columns=["y"]).values
     y = df["y"].values
     return X, y
 
 
-def train_rf(series: pd.Series, lags: int = 20, n_estimators: int = 200,
-             max_depth: int = None, min_samples_leaf: int = 5):
-    X, y = _make_features(series, lags)
-    model = RandomForestRegressor(
-        n_estimators=n_estimators,
-        max_depth=max_depth,
-        min_samples_leaf=min_samples_leaf,
-        n_jobs=-1,
-        random_state=42,
-    )
+def train_rf(series, lags=20, n_estimators=200, exog=None):
+    X, y = _make_features(series, lags, exog)
+    model = RandomForestRegressor(n_estimators=n_estimators, n_jobs=-1, random_state=42)
     model.fit(X, y)
-    return model, lags
+    insample = model.predict(X)
+    return model, lags, insample, y
 
 
-def forecast_rf(model, series: pd.Series, steps: int = 30, lags: int = 20) -> np.ndarray:
+def forecast_rf(model, series, steps=30, lags=20, exog=None):
     history = list(series.values)
     preds   = []
-    for _ in range(steps):
+    for i in range(steps):
         lag_vals = history[-lags:][::-1]
         roll5    = np.mean(history[-5:])
         roll10   = np.mean(history[-10:])
         std5     = np.std(history[-5:])
         std10    = np.std(history[-10:])
-        row      = np.array(lag_vals + [roll5, roll10, std5, std10]).reshape(1, -1)
-        p        = float(model.predict(row)[0])
+        base     = lag_vals + [roll5, roll10, std5, std10]
+        if exog is not None:
+            exog_row = exog.iloc[i].values.tolist() if i < len(exog) else [0] * len(exog.columns)
+            base += exog_row
+        row = np.array(base).reshape(1, -1)
+        p   = float(model.predict(row)[0])
         preds.append(p)
         history.append(p)
     return np.array(preds)
