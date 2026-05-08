@@ -249,7 +249,7 @@ st.markdown("---")
 #  LANDING
 # ─────────────────────────────────────────────────────────────────────────────
 if not run_btn:
-    st.info("👈 Open the **sidebar** (☰) to configure, then tap **Run Analysis**.")
+    st.info("👈 Open the **sidebar** (<<) to configure, then tap **Run Analysis**.")
     st.markdown('<div class="sec-hdr">🌐 Asset Universe</div>', unsafe_allow_html=True)
     tabs = st.tabs(list(CATEGORIES.keys()))
     for tab, (cn, names) in zip(tabs, CATEGORIES.items()):
