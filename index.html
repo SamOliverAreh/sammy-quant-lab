@@ -1,59 +1,88 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
-<title>Sammy Quant Lab · Multi-Asset Forecasting</title>
+<title>Sammy Quant Lab · Multi-Asset Forecasting Engine v4.0</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
-/* ── Reset & tokens ────────────────────────────────────────────────────── */
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#060a14;--s1:#090d1c;--s2:#0c1225;
-  --border:#142030;--border2:#1e3050;
-  --accent:#00d4ff;--a2:#9b4dff;--a3:#ff4466;
-  --green:#00e676;--orange:#ff9500;--yellow:#ffd600;
-  --text:#c8d8e8;--muted:#4a6a8a;
-  --font:'Outfit',sans-serif;--mono:'DM Mono',monospace;
-  --r:14px;--r-sm:8px;
+/* ════════════════════════════════════════════════════════════════════════
+   TOKENS — dark & light
+   ════════════════════════════════════════════════════════════════════════ */
+:root {
+  --bg:#060a14; --s1:#090d1c; --s2:#0c1225;
+  --border:#142030; --border2:#1e3050;
+  --accent:#00d4ff; --a2:#9b4dff; --a3:#ff4466;
+  --green:#00e676; --orange:#ff9500; --yellow:#ffd600;
+  --text:#c8d8e8; --muted:#4a6a8a; --muted2:#2a4060;
+  --card:#0b1220; --nav-bg:rgba(6,10,20,.93);
+  --font:'Outfit',sans-serif; --mono:'DM Mono',monospace;
+  --r:14px; --r-sm:8px;
+  --shadow:0 4px 24px rgba(0,0,0,.4);
 }
-html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
-body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:16px;line-height:1.6;overflow-x:hidden}
+[data-theme="light"] {
+  --bg:#f0f4f8; --s1:#ffffff; --s2:#e8edf5;
+  --border:#d0dae8; --border2:#b0c4da;
+  --accent:#0060cc; --a2:#6020cc; --a3:#cc2244;
+  --green:#009940; --orange:#cc7700; --yellow:#998800;
+  --text:#1a2a3a; --muted:#5a7090; --muted2:#90a8c0;
+  --card:#ffffff; --nav-bg:rgba(240,244,248,.95);
+  --shadow:0 4px 24px rgba(0,0,0,.1);
+}
 
-/* ── Grid overlay ─────────────────────────────────────────────────────── */
-body::before{
+/* ── Reset ───────────────────────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:16px;line-height:1.6;overflow-x:hidden;transition:background .3s,color .3s;}
+
+/* grid overlay — dark only */
+[data-theme="dark"] body::before{
   content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
-  background-image:linear-gradient(rgba(0,212,255,.025)1px,transparent 1px),
-                   linear-gradient(90deg,rgba(0,212,255,.025)1px,transparent 1px);
+  background-image:linear-gradient(rgba(0,212,255,.022)1px,transparent 1px),
+                   linear-gradient(90deg,rgba(0,212,255,.022)1px,transparent 1px);
   background-size:56px 56px;
 }
 
-/* ── Layout ───────────────────────────────────────────────────────────── */
-.wrap{max-width:1100px;margin:0 auto;padding:0 clamp(16px,4vw,40px);position:relative;z-index:1}
+.wrap{max-width:1120px;margin:0 auto;padding:0 clamp(16px,4vw,40px);position:relative;z-index:1}
 
 /* ════════════════════════════════════════════════════════════════════════
-   NAV — hamburger-first
+   NAV
    ════════════════════════════════════════════════════════════════════════ */
 nav{
   position:fixed;top:0;left:0;right:0;z-index:200;
-  background:rgba(6,10,20,.92);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  background:var(--nav-bg);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
   border-bottom:1px solid var(--border);
   height:58px;display:flex;align-items:center;justify-content:space-between;
-  padding:0 clamp(14px,4vw,32px);
+  padding:0 clamp(14px,4vw,32px);transition:background .3s;
 }
-.nav-logo{
-  font-weight:800;font-size:1.05rem;color:var(--accent);text-decoration:none;
-  letter-spacing:-.4px;white-space:nowrap;
-}
+.nav-logo{font-weight:800;font-size:1.05rem;color:var(--accent);text-decoration:none;letter-spacing:-.4px;}
 .nav-logo span{color:var(--a2);}
 
-/* hamburger button */
+.nav-links{display:none;gap:20px;align-items:center;}
+.nav-links a{color:var(--muted);text-decoration:none;font-size:.85rem;font-weight:500;transition:color .2s;}
+.nav-links a:hover{color:var(--text);}
+
+/* theme toggle */
+.theme-btn{
+  display:flex;align-items:center;justify-content:center;
+  width:34px;height:34px;border-radius:8px;cursor:pointer;
+  background:var(--s1);border:1px solid var(--border2);
+  font-size:1rem;transition:.2s;flex-shrink:0;
+}
+.theme-btn:hover{border-color:var(--accent);}
+
+.nav-cta{
+  background:var(--accent)!important;color:#fff!important;
+  padding:6px 18px;border-radius:var(--r-sm);font-weight:700!important;
+}
+[data-theme="light"] .nav-cta{color:#000!important;}
+
+/* hamburger */
 .ham-btn{
   display:flex;flex-direction:column;justify-content:center;gap:5px;
   width:36px;height:36px;background:none;border:1px solid var(--border2);
-  border-radius:var(--r-sm);cursor:pointer;padding:7px 6px;
-  transition:border-color .2s;flex-shrink:0;
+  border-radius:var(--r-sm);cursor:pointer;padding:7px 6px;transition:.2s;flex-shrink:0;
 }
 .ham-btn:hover{border-color:var(--accent);}
 .ham-btn span{display:block;height:2px;background:var(--text);border-radius:2px;transition:.3s;}
@@ -61,41 +90,27 @@ nav{
 .ham-btn.open span:nth-child(2){opacity:0;}
 .ham-btn.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
 
-/* desktop inline links (hidden on mobile) */
-.nav-links{display:none;gap:24px;align-items:center;}
-.nav-links a{color:var(--muted);text-decoration:none;font-size:.85rem;font-weight:500;transition:color .2s;}
-.nav-links a:hover{color:var(--text);}
-.nav-cta{
-  background:var(--accent)!important;color:#000!important;
-  padding:6px 18px;border-radius:var(--r-sm);font-weight:700!important;
-}
-.nav-cta:hover{opacity:.85!important;}
-
-/* mobile drawer */
+/* drawer */
 .nav-drawer{
   position:fixed;top:58px;left:0;right:0;
-  background:rgba(9,13,28,.98);backdrop-filter:blur(20px);
+  background:var(--nav-bg);backdrop-filter:blur(20px);
   border-bottom:1px solid var(--border2);
-  padding:20px clamp(14px,4vw,32px) 28px;
-  transform:translateY(-110%);opacity:0;
-  transition:transform .3s cubic-bezier(.4,0,.2,1),opacity .3s;
-  z-index:190;
+  padding:18px clamp(14px,4vw,32px) 26px;
+  transform:translateY(-110%);opacity:0;transition:.3s;z-index:190;
 }
 .nav-drawer.open{transform:translateY(0);opacity:1;}
 .nav-drawer a{
-  display:block;padding:13px 0;color:var(--text);text-decoration:none;
-  font-size:1rem;font-weight:600;border-bottom:1px solid var(--border);
-  transition:color .2s;
+  display:block;padding:12px 0;color:var(--text);text-decoration:none;
+  font-size:1rem;font-weight:600;border-bottom:1px solid var(--border);transition:color .2s;
 }
-.nav-drawer a:last-child{border-bottom:none;}
 .nav-drawer a:hover{color:var(--accent);}
 .drawer-cta{
   margin-top:14px;display:block;
   background:linear-gradient(135deg,var(--accent),var(--a2));
   color:#000!important;text-align:center;border-radius:var(--r-sm);
-  padding:13px;font-weight:700!important;font-size:1rem;
-  border:none!important;
+  padding:13px;font-weight:700!important;border:none!important;
 }
+.nav-right{display:flex;align-items:center;gap:10px;}
 
 @media(min-width:720px){
   .ham-btn{display:none;}
@@ -114,40 +129,30 @@ nav{
 .hero-glow{
   position:absolute;top:5%;left:50%;transform:translateX(-50%);
   width:min(700px,140vw);height:min(700px,140vw);
-  background:radial-gradient(ellipse,rgba(0,212,255,.06) 0%,transparent 65%);
+  background:radial-gradient(ellipse,rgba(0,212,255,.055) 0%,transparent 65%);
   pointer-events:none;
 }
+[data-theme="light"] .hero-glow{background:radial-gradient(ellipse,rgba(0,96,204,.06) 0%,transparent 65%);}
 .badge-pill{
   display:inline-flex;align-items:center;gap:8px;
   background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.2);
   border-radius:100px;padding:5px 14px;
-  font-family:var(--mono);font-size:.75rem;color:var(--accent);
-  margin-bottom:22px;
+  font-family:var(--mono);font-size:.75rem;color:var(--accent);margin-bottom:22px;
 }
-.dot-pulse{
-  width:7px;height:7px;border-radius:50%;background:var(--green);
-  animation:pulse 2s infinite;
-}
+[data-theme="light"] .badge-pill{background:rgba(0,96,204,.06);border-color:rgba(0,96,204,.2);}
+.dot-pulse{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-
-.hero h1{
-  font-weight:800;font-size:clamp(2.4rem,7vw,5rem);
-  line-height:1.07;letter-spacing:-2px;margin-bottom:8px;
-}
+.hero h1{font-weight:800;font-size:clamp(2.4rem,7vw,5rem);line-height:1.07;letter-spacing:-2px;margin-bottom:8px;}
 .hero h1 .g{
   background:linear-gradient(135deg,var(--accent) 0%,var(--a2) 55%,var(--a3) 100%);
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
 }
-.hero-sub{
-  font-size:clamp(.95rem,2.5vw,1.12rem);color:var(--muted);
-  max-width:560px;margin:18px 0 34px;font-weight:300;line-height:1.75;
-}
+.hero-sub{font-size:clamp(.95rem,2.5vw,1.12rem);color:var(--muted);max-width:580px;margin:18px 0 34px;font-weight:300;line-height:1.75;}
 .hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:clamp(40px,8vw,70px);}
 .btn{
-  display:inline-flex;align-items:center;gap:8px;
-  padding:12px clamp(18px,4vw,28px);border-radius:var(--r-sm);
-  font-weight:700;font-size:.9rem;text-decoration:none;
-  transition:opacity .2s,transform .2s;white-space:nowrap;
+  display:inline-flex;align-items:center;gap:8px;padding:12px clamp(18px,4vw,28px);
+  border-radius:var(--r-sm);font-weight:700;font-size:.9rem;text-decoration:none;
+  transition:.2s;white-space:nowrap;
 }
 .btn:hover{opacity:.87;transform:translateY(-2px);}
 .btn-primary{background:var(--accent);color:#000;}
@@ -157,125 +162,167 @@ nav{
 
 /* stats row */
 .stats-row{
-  display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));
   gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;
 }
-.stat-cell{background:var(--s1);padding:clamp(14px,3vw,22px) clamp(14px,3vw,26px);text-align:center;}
-.stat-val{
-  font-family:var(--mono);font-size:clamp(1.3rem,3.5vw,2rem);
-  font-weight:500;color:var(--accent);
-}
+.stat-cell{background:var(--s1);padding:clamp(14px,3vw,22px) clamp(12px,3vw,24px);text-align:center;}
+.stat-val{font-family:var(--mono);font-size:clamp(1.3rem,3.5vw,2rem);font-weight:500;color:var(--accent);}
 .stat-lbl{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-top:4px;}
+
+/* ── V4 badge strip ── */
+.v4-strip{
+  display:flex;flex-wrap:wrap;gap:8px;margin:28px 0 0;
+}
+.v4-tag{
+  display:inline-flex;align-items:center;gap:5px;padding:4px 12px;
+  border-radius:100px;font-size:.72rem;font-weight:600;font-family:var(--mono);
+  background:var(--s1);border:1px solid var(--border2);color:var(--muted);
+}
+.v4-tag.new{background:rgba(0,230,118,.06);border-color:var(--green);color:var(--green);}
+.v4-tag.upd{background:rgba(0,212,255,.06);border-color:var(--accent);color:var(--accent);}
 
 /* ════════════════════════════════════════════════════════════════════════
    SECTION COMMON
    ════════════════════════════════════════════════════════════════════════ */
 section{padding:clamp(48px,10vw,96px) 0;}
-.sec-label{
-  font-family:var(--mono);font-size:.72rem;color:var(--accent);
-  text-transform:uppercase;letter-spacing:.14em;margin-bottom:10px;
-}
-.sec-title{
-  font-weight:800;font-size:clamp(1.7rem,4vw,2.8rem);
-  letter-spacing:-1px;line-height:1.1;margin-bottom:14px;
-}
+.sec-label{font-family:var(--mono);font-size:.72rem;color:var(--accent);text-transform:uppercase;letter-spacing:.14em;margin-bottom:10px;}
+.sec-title{font-weight:800;font-size:clamp(1.7rem,4vw,2.8rem);letter-spacing:-1px;line-height:1.1;margin-bottom:14px;}
 .sec-sub{font-size:clamp(.9rem,2vw,1.05rem);color:var(--muted);max-width:580px;line-height:1.7;}
+hr.div{border:none;border-top:1px solid var(--border);}
 
 /* ════════════════════════════════════════════════════════════════════════
-   ASSET UNIVERSE GRID
+   WHAT'S NEW IN V4
    ════════════════════════════════════════════════════════════════════════ */
-.asset-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:28px 0 20px;}
-.asset-tab{
-  padding:7px 16px;border-radius:100px;font-size:.82rem;font-weight:600;
-  background:var(--s1);border:1px solid var(--border2);color:var(--muted);
-  cursor:pointer;transition:.2s;
+.v4-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(clamp(240px,38vw,320px),1fr));gap:14px;margin-top:28px;}
+.v4-card{
+  background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:20px 22px;
+  transition:.2s;
 }
-.asset-tab:hover,.asset-tab.active{background:rgba(0,212,255,.1);border-color:var(--accent);color:var(--accent);}
+.v4-card:hover{border-color:var(--accent);transform:translateY(-2px);}
+.v4-card .vc-icon{font-size:1.5rem;margin-bottom:10px;}
+.v4-card .vc-title{font-size:.95rem;font-weight:700;margin-bottom:6px;}
+.v4-card .vc-body{font-size:.82rem;color:var(--muted);line-height:1.6;}
+.v4-card .vc-tag{display:inline-block;margin-top:8px;padding:2px 8px;border-radius:4px;font-size:.68rem;font-weight:700;text-transform:uppercase;}
+.tag-new{background:rgba(0,230,118,.1);color:var(--green);}
+.tag-upd{background:rgba(0,212,255,.1);color:var(--accent);}
 
-.asset-grid{
-  display:grid;grid-template-columns:repeat(auto-fill,minmax(clamp(140px,25vw,190px),1fr));gap:10px;
+/* ════════════════════════════════════════════════════════════════════════
+   PIPELINE FLOW
+   ════════════════════════════════════════════════════════════════════════ */
+.pipeline{display:flex;flex-wrap:wrap;gap:0;margin-top:28px;border:1px solid var(--border);border-radius:var(--r);overflow:hidden;}
+.pipe-step{
+  flex:1;min-width:clamp(140px,20vw,180px);
+  background:var(--s1);padding:18px 16px;text-align:center;
+  border-right:1px solid var(--border);position:relative;
 }
+.pipe-step:last-child{border-right:none;}
+.pipe-arrow{
+  position:absolute;right:-12px;top:50%;transform:translateY(-50%);
+  width:24px;height:24px;background:var(--bg);border:1px solid var(--border);
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:.7rem;color:var(--accent);z-index:1;
+}
+.pipe-step:last-child .pipe-arrow{display:none;}
+.ps-icon{font-size:1.4rem;margin-bottom:6px;}
+.ps-title{font-size:.82rem;font-weight:700;color:var(--text);}
+.ps-sub{font-size:.72rem;color:var(--muted);margin-top:3px;line-height:1.4;}
+@media(max-width:600px){.pipeline{flex-direction:column;}.pipe-step{border-right:none;border-bottom:1px solid var(--border);}.pipe-arrow{display:none;}}
+
+/* ════════════════════════════════════════════════════════════════════════
+   ASSET UNIVERSE
+   ════════════════════════════════════════════════════════════════════════ */
+.asset-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:24px 0 18px;}
+.asset-tab{
+  padding:6px 14px;border-radius:100px;font-size:.8rem;font-weight:600;
+  background:var(--s1);border:1px solid var(--border2);color:var(--muted);cursor:pointer;transition:.2s;
+}
+.asset-tab:hover,.asset-tab.active{background:rgba(0,212,255,.08);border-color:var(--accent);color:var(--accent);}
+[data-theme="light"] .asset-tab:hover,[data-theme="light"] .asset-tab.active{background:rgba(0,96,204,.06);}
+.asset-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(clamp(140px,22vw,185px),1fr));gap:10px;}
 .asset-card{
   background:var(--s1);border:1px solid var(--border);border-radius:var(--r-sm);
-  padding:14px 16px;transition:border-color .2s,transform .2s;cursor:default;
+  padding:13px 15px;transition:.2s;
 }
 .asset-card:hover{border-color:var(--accent);transform:translateY(-2px);}
 .asset-card .ticker{font-family:var(--mono);font-size:.82rem;color:var(--accent);margin-bottom:3px;}
-.asset-card .name{font-size:.8rem;color:var(--muted);line-height:1.3;}
-.asset-cat-badge{
-  display:inline-block;padding:2px 8px;border-radius:4px;font-size:.65rem;font-weight:600;
-  margin-top:6px;text-transform:uppercase;letter-spacing:.06em;
-}
+.asset-card .name{font-size:.78rem;color:var(--muted);line-height:1.3;}
+.asset-cat-badge{display:inline-block;padding:2px 7px;border-radius:4px;font-size:.62rem;font-weight:700;margin-top:6px;text-transform:uppercase;letter-spacing:.05em;}
+.tag-blue  {background:rgba(0,212,255,.1);color:var(--accent);}
+.tag-purple{background:rgba(155,77,255,.1);color:var(--a2);}
+.tag-green {background:rgba(0,230,118,.1);color:var(--green);}
+.tag-orange{background:rgba(255,149,0,.1);color:var(--orange);}
+.tag-red   {background:rgba(255,68,102,.1);color:var(--a3);}
 
 /* ════════════════════════════════════════════════════════════════════════
-   MODEL CARDS
+   MODEL CATALOGUE
    ════════════════════════════════════════════════════════════════════════ */
-.model-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(clamp(200px,30vw,260px),1fr));gap:14px;margin-top:28px;}
-.model-card{
-  background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:20px;
-  transition:border-color .2s,transform .2s;
-}
+.model-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(clamp(200px,28vw,250px),1fr));gap:14px;margin-top:28px;}
+.model-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;transition:.2s;}
 .model-card:hover{transform:translateY(-3px);}
-.model-card .mc-group{font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;}
-.model-card .mc-name{font-size:1rem;font-weight:700;margin-bottom:8px;}
-.model-card .mc-desc{font-size:.8rem;color:var(--muted);line-height:1.5;}
-.mc-stat{color:#00e676;font-size:.75rem;font-family:var(--mono);margin-top:10px;}
+.mc-group{font-family:var(--mono);font-size:.66rem;text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px;}
+.mc-name{font-size:.95rem;font-weight:700;margin-bottom:7px;}
+.mc-desc{font-size:.78rem;color:var(--muted);line-height:1.5;}
+.mc-stat{font-size:.72rem;font-family:var(--mono);margin-top:8px;color:var(--green);}
+.g-stat  .mc-group,.g-stat  .mc-name{color:var(--accent);}
+.g-dl    .mc-group,.g-dl    .mc-name{color:var(--a2);}
+.g-tree  .mc-group,.g-tree  .mc-name{color:var(--orange);}
+.g-hybrid.mc-group,.g-hybrid .mc-name{color:var(--a3);}
+.g-ens   .mc-group,.g-ens   .mc-name{color:var(--green);}
 
-/* group colours */
-.g-stat  .mc-group{color:var(--accent);}    .g-stat  .mc-name{color:var(--accent);}
-.g-dl    .mc-group{color:var(--a2);}         .g-dl    .mc-name{color:var(--a2);}
-.g-tree  .mc-group{color:var(--orange);}     .g-tree  .mc-name{color:var(--orange);}
-.g-hybrid.mc-group,.g-hybrid .mc-group{color:var(--a3);}  .g-hybrid .mc-name{color:var(--a3);}
-.g-ens   .mc-group{color:var(--green);}      .g-ens   .mc-name{color:var(--green);}
+/* ════════════════════════════════════════════════════════════════════════
+   STATS TESTS SECTION
+   ════════════════════════════════════════════════════════════════════════ */
+.test-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(clamp(220px,35vw,300px),1fr));gap:12px;margin-top:24px;}
+.test-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;}
+.test-card .tc-name{font-size:.88rem;font-weight:700;margin-bottom:5px;color:var(--text);}
+.test-card .tc-h0{font-family:var(--mono);font-size:.72rem;color:var(--muted);margin-bottom:8px;}
+.test-card .tc-result{font-size:.8rem;color:var(--muted);line-height:1.5;}
+.test-card .tc-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:.7rem;font-weight:700;margin-top:6px;}
+.badge-pass{background:rgba(0,230,118,.1);color:var(--green);}
+.badge-warn{background:rgba(255,149,0,.1);color:var(--orange);}
+
+/* ════════════════════════════════════════════════════════════════════════
+   EVALUATION METRICS
+   ════════════════════════════════════════════════════════════════════════ */
+.metrics-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(clamp(190px,28vw,240px),1fr));gap:12px;margin-top:24px;}
+.metric-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;}
+.metric-card .mk{font-weight:700;font-size:.9rem;margin-bottom:5px;}
+.metric-card .mv{font-size:.78rem;color:var(--muted);line-height:1.5;}
+.metric-card .new-badge{font-size:.62rem;background:rgba(0,230,118,.1);color:var(--green);padding:1px 6px;border-radius:3px;font-weight:700;margin-left:5px;}
 
 /* ════════════════════════════════════════════════════════════════════════
    ARCHITECTURE
    ════════════════════════════════════════════════════════════════════════ */
 .arch-box{
   background:var(--s1);border:1px solid var(--border2);border-radius:var(--r);
-  padding:clamp(16px,4vw,28px);overflow-x:auto;
+  padding:clamp(16px,4vw,28px);overflow-x:auto;margin-top:24px;
 }
-.arch-box pre{font-family:var(--mono);font-size:clamp(.7rem,1.8vw,.82rem);color:#8ab4cc;line-height:1.7;white-space:pre;}
-.arch-box .h{color:var(--accent);}
-.arch-box .c{color:var(--a2);}
-.arch-box .new{color:var(--green);}
+.arch-box pre{font-family:var(--mono);font-size:clamp(.68rem,1.7vw,.8rem);color:var(--muted);line-height:1.75;white-space:pre;}
+.arch-box .ah{color:var(--accent);}
+.arch-box .ac{color:var(--a2);}
+.arch-box .an{color:var(--green);}
+.arch-box .au{color:var(--orange);}
 
 /* ════════════════════════════════════════════════════════════════════════
-   METRICS TABLE
+   MALAYSIA EDUCATION
    ════════════════════════════════════════════════════════════════════════ */
-.metrics-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(clamp(200px,30vw,260px),1fr));gap:12px;margin-top:24px;}
-.metric-card{
-  background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;
-}
-.metric-card .mk{font-weight:700;font-size:.92rem;margin-bottom:6px;color:var(--text);}
-.metric-card .mv{font-family:var(--mono);font-size:.8rem;color:var(--muted);}
-
-/* ════════════════════════════════════════════════════════════════════════
-   MALAYSIA EDUCATION SECTION
-   ════════════════════════════════════════════════════════════════════════ */
-.edu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(clamp(240px,40vw,320px),1fr));gap:14px;margin-top:24px;}
-.edu-card{
-  background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:20px 22px;
-}
+.edu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(clamp(240px,38vw,310px),1fr));gap:14px;margin-top:24px;}
+.edu-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:20px 22px;}
 .edu-icon{font-size:1.4rem;margin-bottom:8px;}
-.edu-title{font-weight:700;font-size:.95rem;margin-bottom:6px;color:var(--text);}
-.edu-body{font-size:.82rem;color:var(--muted);line-height:1.6;}
-.edu-bm{font-size:.78rem;color:#3a6080;margin-top:6px;font-style:italic;}
+.edu-title{font-weight:700;font-size:.93rem;margin-bottom:6px;}
+.edu-body{font-size:.8rem;color:var(--muted);line-height:1.6;}
+.edu-bm{font-size:.76rem;color:var(--muted2);margin-top:6px;font-style:italic;}
 
 /* ════════════════════════════════════════════════════════════════════════
    CTA
    ════════════════════════════════════════════════════════════════════════ */
 .cta-box{
-  background:linear-gradient(135deg,rgba(0,212,255,.06) 0%,rgba(155,77,255,.06) 100%);
-  border:1px solid rgba(0,212,255,.15);border-radius:20px;
+  background:linear-gradient(135deg,rgba(0,212,255,.06),rgba(155,77,255,.06));
+  border:1px solid rgba(0,212,255,.14);border-radius:20px;
   padding:clamp(32px,8vw,60px) clamp(20px,6vw,48px);
   text-align:center;position:relative;overflow:hidden;
 }
-.cta-box::before{
-  content:'';position:absolute;inset:0;
-  background:radial-gradient(ellipse at 50% 0%,rgba(0,212,255,.08),transparent 60%);
-  pointer-events:none;
-}
+.cta-box::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(0,212,255,.07),transparent 60%);pointer-events:none;}
 .cta-box h2{font-size:clamp(1.6rem,4vw,2.4rem);font-weight:800;letter-spacing:-1px;margin-bottom:12px;}
 .cta-box p{color:var(--muted);font-size:clamp(.9rem,2vw,1rem);max-width:500px;margin:0 auto 28px;}
 .cta-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
@@ -284,75 +331,66 @@ section{padding:clamp(48px,10vw,96px) 0;}
    FOOTER
    ════════════════════════════════════════════════════════════════════════ */
 footer{border-top:1px solid var(--border);padding:32px 0 max(24px,env(safe-area-inset-bottom));}
-.footer-inner{
-  display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center;
-}
+.footer-inner{display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center;}
 @media(min-width:640px){.footer-inner{flex-direction:row;justify-content:space-between;text-align:left;}}
 .footer-logo{font-weight:800;font-size:.95rem;color:var(--accent);}
-.footer-links{display:flex;gap:20px;flex-wrap:wrap;justify-content:center;}
-.footer-links a{color:var(--muted);text-decoration:none;font-size:.82rem;transition:color .2s;}
+.footer-links{display:flex;gap:18px;flex-wrap:wrap;justify-content:center;}
+.footer-links a{color:var(--muted);text-decoration:none;font-size:.8rem;transition:color .2s;}
 .footer-links a:hover{color:var(--text);}
-.footer-disclaimer{font-size:.72rem;color:#243548;max-width:480px;line-height:1.5;}
+.footer-disc{font-size:.7rem;color:var(--muted2);max-width:460px;line-height:1.5;}
 
-/* ════════════════════════════════════════════════════════════════════════
-   UTILITIES
-   ════════════════════════════════════════════════════════════════════════ */
-.divider{border:none;border-top:1px solid var(--border);margin:0;}
-.tag{
-  display:inline-block;padding:3px 10px;border-radius:4px;font-size:.7rem;
-  font-weight:600;text-transform:uppercase;letter-spacing:.06em;
-}
-.tag-blue{background:rgba(0,212,255,.1);color:var(--accent);}
-.tag-purple{background:rgba(155,77,255,.1);color:var(--a2);}
-.tag-green{background:rgba(0,230,118,.1);color:var(--green);}
-.tag-orange{background:rgba(255,149,0,.1);color:var(--orange);}
-.tag-red{background:rgba(255,68,102,.1);color:var(--a3);}
-
-/* Fade-in on scroll */
+/* scroll reveal */
 .reveal{opacity:0;transform:translateY(28px);transition:opacity .55s,transform .55s;}
 .reveal.visible{opacity:1;transform:none;}
 </style>
 </head>
 <body>
 
-<!-- ════════════════ NAV ════════════════ -->
+<!-- ═══════════════════ NAV ═══════════════════ -->
 <nav>
   <a href="#" class="nav-logo">⚡ Sammy <span>Quant</span></a>
   <div class="nav-links">
+    <a href="#whats-new">v4.0</a>
+    <a href="#pipeline">Pipeline</a>
     <a href="#models">Models</a>
+    <a href="#tests">Tests</a>
     <a href="#assets">Assets</a>
-    <a href="#architecture">Architecture</a>
     <a href="#education">Education</a>
     <a href="https://github.com/SamOliverAreh/sammy-quant-lab" target="_blank">GitHub</a>
     <a href="https://sammy-quant-lab.streamlit.app" class="nav-cta" target="_blank">▶ Live Demo</a>
   </div>
-  <button class="ham-btn" id="hamBtn" aria-label="Toggle menu">
-    <span></span><span></span><span></span>
-  </button>
+  <div class="nav-right">
+    <button class="theme-btn" id="themeBtn" aria-label="Toggle theme">🌙</button>
+    <button class="ham-btn" id="hamBtn" aria-label="Menu"><span></span><span></span><span></span></button>
+  </div>
 </nav>
 
-<!-- ════════════════ MOBILE DRAWER ════════════════ -->
+<!-- Mobile drawer -->
 <div class="nav-drawer" id="drawer">
-  <a href="#models" onclick="closeDrawer()">🤖 Models</a>
-  <a href="#assets" onclick="closeDrawer()">📊 Assets</a>
-  <a href="#architecture" onclick="closeDrawer()">🏗 Architecture</a>
-  <a href="#education" onclick="closeDrawer()">📚 Education</a>
+  <a href="#whats-new"  onclick="closeDrawer()">🆕 What's New in v4.0</a>
+  <a href="#pipeline"   onclick="closeDrawer()">🔄 Pipeline</a>
+  <a href="#models"     onclick="closeDrawer()">🤖 Models</a>
+  <a href="#tests"      onclick="closeDrawer()">🧪 Statistical Tests</a>
+  <a href="#assets"     onclick="closeDrawer()">📊 Assets</a>
+  <a href="#education"  onclick="closeDrawer()">📚 Education</a>
   <a href="https://github.com/SamOliverAreh/sammy-quant-lab" target="_blank">⭐ GitHub</a>
   <a href="https://www.linkedin.com/in/sam-oliver-areh/" target="_blank">💼 LinkedIn</a>
   <a href="https://sammy-quant-lab.streamlit.app" target="_blank" class="drawer-cta">▶ Open Live Demo</a>
 </div>
 
-<!-- ════════════════ HERO ════════════════ -->
+<!-- ═══════════════════ HERO ═══════════════════ -->
 <section class="hero" id="home">
   <div class="wrap">
     <div class="hero-glow"></div>
-    <div class="badge-pill"><span class="dot-pulse"></span>v3.0 — Live &amp; Open Source</div>
+    <div class="badge-pill"><span class="dot-pulse"></span>v4.0 — Log-Returns · Multi-Model · Live</div>
     <h1>
       <div>Multi-Asset</div>
       <div class="g">Quant Lab</div>
     </h1>
     <p class="hero-sub">
-      Production-grade financial forecasting engine: 12 models across Statistical, Deep Learning, Tree-based, Hybrid &amp; Ensemble methods — covering FX, Commodities, Indices, Stocks and Crypto.
+      Production-grade financial forecasting on <b>log-returns</b> — statistically validated, multivariate-ready.
+      12 models · 6 asset classes · 50+ instruments · full evaluation suite with DM test, Sortino, Information Ratio,
+      and transaction-cost equity simulation.
     </p>
     <div class="hero-actions">
       <a href="https://sammy-quant-lab.streamlit.app" class="btn btn-primary" target="_blank">▶ Live Dashboard</a>
@@ -363,38 +401,388 @@ footer{border-top:1px solid var(--border);padding:32px 0 max(24px,env(safe-area-
       <div class="stat-cell"><div class="stat-val">12</div><div class="stat-lbl">Models</div></div>
       <div class="stat-cell"><div class="stat-val">50+</div><div class="stat-lbl">Instruments</div></div>
       <div class="stat-cell"><div class="stat-val">6</div><div class="stat-lbl">Asset Classes</div></div>
-      <div class="stat-cell"><div class="stat-val">E2E</div><div class="stat-lbl">ML Pipeline</div></div>
+      <div class="stat-cell"><div class="stat-val">5</div><div class="stat-lbl">Stat Tests</div></div>
+      <div class="stat-cell"><div class="stat-val">8</div><div class="stat-lbl">Eval Metrics</div></div>
+    </div>
+    <div class="v4-strip reveal">
+      <span class="v4-tag new">🆕 Log-Returns Target</span>
+      <span class="v4-tag new">🆕 ADF · KPSS · LB · JB · ARCH-LM</span>
+      <span class="v4-tag new">🆕 Granger Causality</span>
+      <span class="v4-tag new">🆕 Multivariate Models</span>
+      <span class="v4-tag new">🆕 DM Test</span>
+      <span class="v4-tag new">🆕 Sortino · Info Ratio</span>
+      <span class="v4-tag new">🆕 TC + GARCH Sizing</span>
+      <span class="v4-tag new">🆕 Random Walk Benchmark</span>
+      <span class="v4-tag upd">🔄 Flexible GARCH</span>
+      <span class="v4-tag upd">🌓 Dark / Light Mode</span>
     </div>
   </div>
 </section>
 
-<hr class="divider">
+<hr class="div">
 
-<!-- ════════════════ ASSET UNIVERSE ════════════════ -->
+<!-- ═══════════════════ WHAT'S NEW ═══════════════════ -->
+<section id="whats-new">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="sec-label">Version 4.0</div>
+      <h2 class="sec-title">What's New</h2>
+      <p class="sec-sub">15 enhancements from data science fundamentals to practical trading simulation.</p>
+    </div>
+    <div class="v4-grid reveal">
+
+      <div class="v4-card">
+        <div class="vc-icon">📉</div>
+        <div class="vc-title">Log-Returns as Target</div>
+        <div class="vc-body">All models now predict log(P_t / P_{t−1}) — stationary, unit-free, comparable across all asset classes. Forecasts are inverse-transformed back to price for display.</div>
+        <span class="vc-tag tag-new">NEW</span>
+      </div>
+
+      <div class="v4-card">
+        <div class="vc-icon">🧪</div>
+        <div class="vc-title">5 Statistical Tests</div>
+        <div class="vc-body">ADF + KPSS (stationarity), Ljung-Box (autocorrelation), Jarque-Bera (normality / fat tails), ARCH-LM (volatility clustering). Each with interpretation in plain English.</div>
+        <span class="vc-tag tag-new">NEW</span>
+      </div>
+
+      <div class="v4-card">
+        <div class="vc-icon">🔗</div>
+        <div class="vc-title">Granger Causality + Correlation</div>
+        <div class="vc-body">Automatic feature selection: features that Granger-cause the target OR have |correlation| above threshold are selected as exogenous inputs for multivariate models.</div>
+        <span class="vc-tag tag-new">NEW</span>
+      </div>
+
+      <div class="v4-card">
+        <div class="vc-icon">🌐</div>
+        <div class="vc-title">Multivariate Time Series</div>
+        <div class="vc-body">ARIMA (ARIMAX), LSTM, GRU, XGBoost, and Random Forest now accept exogenous features selected via Granger + correlation — turning univariate into multivariate models.</div>
+        <span class="vc-tag tag-new">NEW</span>
+      </div>
+
+      <div class="v4-card">
+        <div class="vc-icon">📊</div>
+        <div class="vc-title">Multi-Model Forecast Plot</div>
+        <div class="vc-body">Select multiple models at once. All forecasts plotted together on both log-return and reconstructed-price charts for direct visual comparison.</div>
+        <span class="vc-tag tag-new">NEW</span>
+      </div>
+
+      <div class="v4-card">
+        <div class="vc-icon">🎯</div>
+        <div class="vc-title">Random Walk Benchmark</div>
+        <div class="vc-body">Every model is compared against the naive Random Walk (ŷ_t = y_{t−1}). A model that can't beat the Random Walk has no practical forecasting value.</div>
+        <span class="vc-tag tag-new">NEW</span>
+      </div>
+
+      <div class="v4-card">
+        <div class="vc-icon">🔬</div>
+        <div class="vc-title">Diebold-Mariano Test</div>
+        <div class="vc-body">Statistical test of equal predictive accuracy between models. DM p-value tells you whether one model is statistically significantly better than another — not just numerically.</div>
+        <span class="vc-tag tag-new">NEW</span>
+      </div>
+
+      <div class="v4-card">
+        <div class="vc-icon">📈</div>
+        <div class="vc-title">Sortino & Information Ratio</div>
+        <div class="vc-body">Sortino only penalises downside deviation — better than Sharpe for fat-tailed return distributions. Information Ratio compares active return against a buy-and-hold benchmark.</div>
+        <span class="vc-tag tag-new">NEW</span>
+      </div>
+
+      <div class="v4-card">
+        <div class="vc-icon">💰</div>
+        <div class="vc-title">TC + GARCH Position Sizing</div>
+        <div class="vc-body">Equity curve simulation with 0.1% transaction cost per trade. GARCH-based sizing scales position size inversely with forecast volatility — trade less when risk is high.</div>
+        <span class="vc-tag tag-new">NEW</span>
+      </div>
+
+      <div class="v4-card">
+        <div class="vc-icon">🔭</div>
+        <div class="vc-title">In-Sample Actual vs Predicted</div>
+        <div class="vc-body">New plot showing fitted vs actual log-returns on training data. Detects lag-shifting — a model should track turning points, not just copy yesterday's value.</div>
+        <span class="vc-tag tag-new">NEW</span>
+      </div>
+
+      <div class="v4-card">
+        <div class="vc-icon">⚙️</div>
+        <div class="vc-title">Flexible GARCH Selection</div>
+        <div class="vc-body">GARCH now grid-searches p ∈ {1,2}, q ∈ {1,2} and distributions (Normal, Student-t, Skew-t) — selecting the best specification by BIC. No longer fixed at GARCH(1,1).</div>
+        <span class="vc-tag tag-upd">UPDATED</span>
+      </div>
+
+      <div class="v4-card">
+        <div class="vc-icon">🌓</div>
+        <div class="vc-title">Dark / Light Mode</div>
+        <div class="vc-body">Both the portfolio page and the Streamlit dashboard support dark and light mode with a single toggle button — no external libraries required.</div>
+        <span class="vc-tag tag-upd">UPDATED</span>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ═══════════════════ PIPELINE ═══════════════════ -->
+<section id="pipeline">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="sec-label">v4.0 Pipeline</div>
+      <h2 class="sec-title">End-to-End Flow</h2>
+      <p class="sec-sub">From raw OHLCV to reconstructed price forecast — every step is statistically grounded.</p>
+    </div>
+    <div class="pipeline reveal">
+      <div class="pipe-step">
+        <div class="ps-icon">📡</div>
+        <div class="ps-title">Ingest</div>
+        <div class="ps-sub">yfinance · 50+ instruments · 6 asset classes</div>
+        <div class="pipe-arrow">→</div>
+      </div>
+      <div class="pipe-step">
+        <div class="ps-icon">📉</div>
+        <div class="ps-title">Log-Returns</div>
+        <div class="ps-sub">log(P_t/P_{t−1}) · stationary · unit-free</div>
+        <div class="pipe-arrow">→</div>
+      </div>
+      <div class="pipe-step">
+        <div class="ps-icon">🧪</div>
+        <div class="ps-title">Stat Tests</div>
+        <div class="ps-sub">ADF · KPSS · LB · JB · ARCH-LM</div>
+        <div class="pipe-arrow">→</div>
+      </div>
+      <div class="pipe-step">
+        <div class="ps-icon">🔗</div>
+        <div class="ps-title">Features</div>
+        <div class="ps-sub">Granger + Corr · exog selection</div>
+        <div class="pipe-arrow">→</div>
+      </div>
+      <div class="pipe-step">
+        <div class="ps-icon">🤖</div>
+        <div class="ps-title">Models</div>
+        <div class="ps-sub">12 models · uni + multivariate</div>
+        <div class="pipe-arrow">→</div>
+      </div>
+      <div class="pipe-step">
+        <div class="ps-icon">📐</div>
+        <div class="ps-title">Evaluate</div>
+        <div class="ps-sub">DM · Hit Ratio · Sortino · IR · vs RW</div>
+        <div class="pipe-arrow">→</div>
+      </div>
+      <div class="pipe-step">
+        <div class="ps-icon">💹</div>
+        <div class="ps-title">Price Output</div>
+        <div class="ps-sub">exp(cumsum(log-ret)) · TC simulation</div>
+      </div>
+    </div>
+
+    <!-- Architecture tree -->
+    <div class="arch-box reveal" style="margin-top:28px;">
+<pre>
+<span class="ah">sammy-quant-lab/</span>
+│
+├── <span class="ac">analysis/</span>                         <span class="an">← NEW folder</span>
+│   ├── statistical_tests.py          <span class="an">← ADF, KPSS, Ljung-Box, JB, ARCH-LM</span>
+│   └── feature_selection.py          <span class="an">← Granger causality + correlation selector</span>
+│
+├── <span class="ac">data_pipeline/</span>
+│   ├── ingestion.py                  50+ instruments · 6 asset classes
+│   ├── preprocessing.py              <span class="au">← log_returns target + logret_to_price()</span>
+│   └── features.py                   MA, EMA, RSI, Bollinger, MACD, ATR, Stoch
+│
+├── <span class="ac">models/</span>
+│   ├── statistical/
+│   │   ├── arima.py                  <span class="au">← ARIMAX (exog) + in-sample output</span>
+│   │   ├── ets.py                    <span class="au">← in-sample fitted values</span>
+│   │   ├── garch.py                  <span class="an">← Flexible GARCH(p,q) + dist by BIC</span>
+│   │   └── prophet_model.py          Prophet trend + seasonality
+│   ├── ml/
+│   │   ├── lstm.py                   <span class="au">← Multivariate + in-sample output</span>
+│   │   ├── gru.py                    <span class="au">← Multivariate + in-sample output</span>
+│   │   ├── transformer_model.py      Encoder Transformer
+│   │   ├── xgboost_model.py          <span class="au">← Multivariate exog + in-sample</span>
+│   │   └── random_forest.py          <span class="au">← Multivariate exog + in-sample</span>
+│   ├── hybrid/                       ARIMA+LSTM · ETS+GRU · Prophet+XGB
+│   └── ensemble/                     Ridge stacked ensemble
+│
+├── <span class="ac">evaluation/</span>
+│   └── metrics.py                    <span class="an">← Hit Ratio, Sortino, IR, DM test,</span>
+│                                     <span class="an">   equity curve TC, Random Walk, comparison table</span>
+│
+├── <span class="ac">dashboard/</span>
+│   └── app.py                        <span class="an">← Full v4.0 dashboard (960 lines)</span>
+│
+└── index.html                        <span class="an">← This file — v4.0 portfolio page</span>
+</pre>
+    </div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ═══════════════════ STATISTICAL TESTS ═══════════════════ -->
+<section id="tests">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="sec-label">Statistical Validation</div>
+      <h2 class="sec-title">5 Pre-Modelling Tests</h2>
+      <p class="sec-sub">Every dataset is tested before any model runs — results guide model selection and risk assumptions.</p>
+    </div>
+    <div class="test-grid reveal">
+      <div class="test-card">
+        <div class="tc-name">ADF — Augmented Dickey-Fuller</div>
+        <div class="tc-h0">H₀: Series has a unit root (non-stationary)</div>
+        <div class="tc-result">Reject H₀ → stationary. Log-returns are typically stationary, confirming suitability for time-series modelling.</div>
+        <span class="tc-badge badge-pass">Stationarity</span>
+      </div>
+      <div class="test-card">
+        <div class="tc-name">KPSS</div>
+        <div class="tc-h0">H₀: Series IS stationary (complement to ADF)</div>
+        <div class="tc-result">Fail to reject H₀ → stationary. Used together with ADF: if both agree, stationarity is confirmed strongly.</div>
+        <span class="tc-badge badge-pass">Stationarity</span>
+      </div>
+      <div class="test-card">
+        <div class="tc-name">Ljung-Box</div>
+        <div class="tc-h0">H₀: No serial autocorrelation up to lag k</div>
+        <div class="tc-result">Reject H₀ → autocorrelation present → AR/MA or LSTM models can exploit this structure. No rejection → near white noise, favour nonlinear models.</div>
+        <span class="tc-badge badge-warn">Autocorrelation</span>
+      </div>
+      <div class="test-card">
+        <div class="tc-name">Jarque-Bera</div>
+        <div class="tc-h0">H₀: Returns are normally distributed</div>
+        <div class="tc-result">Reject H₀ → fat tails / skewness present. Standard Gaussian VaR underestimates tail risk. Use Student-t GARCH or CVaR-based risk measures.</div>
+        <span class="tc-badge badge-warn">Normality</span>
+      </div>
+      <div class="test-card">
+        <div class="tc-name">ARCH-LM</div>
+        <div class="tc-h0">H₀: No conditional heteroscedasticity (ARCH effects)</div>
+        <div class="tc-result">Reject H₀ → volatility clustering confirmed. Large moves follow large moves — GARCH modelling is warranted and GARCH-based position sizing is recommended.</div>
+        <span class="tc-badge badge-warn">Volatility Clustering</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ═══════════════════ MODELS ═══════════════════ -->
+<section id="models">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="sec-label">Model Catalogue</div>
+      <h2 class="sec-title">12 Forecasting Models</h2>
+      <p class="sec-sub">All models predict log-returns. Multivariate models accept Granger-selected exogenous features. Forecasts are inverse-transformed to price.</p>
+    </div>
+    <div class="model-grid reveal">
+      <div class="model-card g-stat">
+        <div class="mc-group">Statistical</div><div class="mc-name">ARIMA / ARIMAX</div>
+        <div class="mc-desc">Auto order selection via AIC. ARIMAX accepts exogenous features selected by Granger causality. In-sample fitted values output.</div>
+        <div class="mc-stat">95% confidence intervals</div>
+      </div>
+      <div class="model-card g-stat">
+        <div class="mc-group">Statistical</div><div class="mc-name">ETS · Holt Trend</div>
+        <div class="mc-desc">Damped exponential smoothing. In-sample fitted values for actual-vs-predicted plot. Robust for trending series.</div>
+        <div class="mc-stat">AIC-optimised · damped trend</div>
+      </div>
+      <div class="model-card g-stat">
+        <div class="mc-group">Statistical</div><div class="mc-name">Prophet</div>
+        <div class="mc-desc">Meta Prophet with trend, weekly and yearly seasonality on log-returns. 95% uncertainty bands.</div>
+        <div class="mc-stat">Changepoint detection</div>
+      </div>
+      <div class="model-card g-stat">
+        <div class="mc-group">Statistical</div><div class="mc-name">Flexible GARCH</div>
+        <div class="mc-desc">Grid-searches GARCH(p,q) with p,q ∈ {1,2} and distributions: Normal, Student-t, Skew-t. Best selected by BIC. Used for volatility forecast and position sizing.</div>
+        <div class="mc-stat">Forward vol + position sizing</div>
+      </div>
+      <div class="model-card g-dl">
+        <div class="mc-group">Deep Learning</div><div class="mc-name">LSTM</div>
+        <div class="mc-desc">Stacked 2-layer LSTM on log-returns. Multivariate: accepts Granger-selected exogenous features. StandardScaler normalisation. In-sample output.</div>
+        <div class="mc-stat">Dropout · gradient clipping</div>
+      </div>
+      <div class="model-card g-dl">
+        <div class="mc-group">Deep Learning</div><div class="mc-name">GRU</div>
+        <div class="mc-desc">Gated Recurrent Unit — lighter than LSTM, often converges faster on financial log-returns. Multivariate-ready with exog support.</div>
+        <div class="mc-stat">Faster convergence than LSTM</div>
+      </div>
+      <div class="model-card g-dl">
+        <div class="mc-group">Deep Learning</div><div class="mc-name">Transformer</div>
+        <div class="mc-desc">Encoder-only Transformer with positional encoding and multi-head self-attention on log-return sequences.</div>
+        <div class="mc-stat">Attention-based · PyTorch</div>
+      </div>
+      <div class="model-card g-tree">
+        <div class="mc-group">Tree Models</div><div class="mc-name">XGBoost</div>
+        <div class="mc-desc">Gradient-boosted trees on lag features + rolling statistics of log-returns. Accepts exogenous features. Recursive multi-step forecasting. In-sample output.</div>
+        <div class="mc-stat">n_estimators=300 · multivariate</div>
+      </div>
+      <div class="model-card g-tree">
+        <div class="mc-group">Tree Models</div><div class="mc-name">Random Forest</div>
+        <div class="mc-desc">Bootstrap-aggregated trees on lag + rolling features of log-returns. Multivariate exog support. Good variance reducer. In-sample fitted values.</div>
+        <div class="mc-stat">n_estimators=200 · parallel</div>
+      </div>
+      <div class="model-card g-hybrid">
+        <div class="mc-group">Hybrid</div><div class="mc-name">ARIMA + LSTM</div>
+        <div class="mc-desc">ARIMA captures linear structure of log-returns; LSTM models the nonlinear residuals.</div>
+        <div class="mc-stat">Decomposition approach</div>
+      </div>
+      <div class="model-card g-hybrid">
+        <div class="mc-group">Hybrid</div><div class="mc-name">ETS + GRU</div>
+        <div class="mc-desc">ETS extracts the trend component from log-returns; GRU corrects nonlinear deviations in residuals.</div>
+        <div class="mc-stat">Trend + residual split</div>
+      </div>
+      <div class="model-card g-ens" style="grid-column:1/-1;max-width:520px;">
+        <div class="mc-group">🏆 Ensemble</div><div class="mc-name">Stacked Ensemble</div>
+        <div class="mc-desc">Walk-forward OOS stacking of 6 base models (ARIMA, ETS, LSTM, GRU, XGBoost, RF) on log-returns. Ridge regression meta-learner learns optimal weighting. No look-ahead bias.</div>
+        <div class="mc-stat">Ridge meta-learner · 6 base models · walk-forward CV</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ═══════════════════ EVALUATION ═══════════════════ -->
+<section id="evaluation">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="sec-label">Evaluation Suite</div>
+      <h2 class="sec-title">8 Performance Metrics + Random Walk Benchmark</h2>
+      <p class="sec-sub">All metrics computed on log-returns and displayed in a ranked comparison table — ★ marks best per metric.</p>
+    </div>
+    <div class="metrics-grid reveal">
+      <div class="metric-card"><div class="mk">RMSE</div><div class="mv">Root Mean Squared Error on log-returns. Penalises large deviations more heavily than MAE.</div></div>
+      <div class="metric-card"><div class="mk">MAE</div><div class="mv">Mean Absolute Error on log-returns. Robust to outliers.</div></div>
+      <div class="metric-card"><div class="mk">MAPE</div><div class="mv">Mean Absolute Percentage Error. Relative accuracy — comparable across asset classes with different scales.</div></div>
+      <div class="metric-card"><div class="mk">Hit Ratio <span class="new-badge">NEW</span></div><div class="mv">% of periods where predicted return sign matches actual sign. Target: >50% to beat random, >55% for practical edge.</div></div>
+      <div class="metric-card"><div class="mk">Diebold-Mariano <span class="new-badge">NEW</span></div><div class="mv">Statistical test of equal predictive accuracy. DM p&lt;0.05 means one model is significantly better than another.</div></div>
+      <div class="metric-card"><div class="mk">Sortino Ratio <span class="new-badge">NEW</span></div><div class="mv">Risk-adjusted return penalising only downside deviation. Better than Sharpe for fat-tailed financial returns.</div></div>
+      <div class="metric-card"><div class="mk">Information Ratio <span class="new-badge">NEW</span></div><div class="mv">Active return over buy-and-hold ÷ tracking error. Measures value added vs passive benchmark.</div></div>
+      <div class="metric-card"><div class="mk">Random Walk Benchmark <span class="new-badge">NEW</span></div><div class="mv">Baseline: ŷ_t = y_{t−1}. On log-returns, this means predicting zero change. All models compared against this naive forecast.</div></div>
+    </div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ═══════════════════ ASSETS ═══════════════════ -->
 <section id="assets">
   <div class="wrap">
     <div class="reveal">
       <div class="sec-label">Asset Universe</div>
-      <h2 class="sec-title">50+ Global &amp; Malaysia Instruments</h2>
-      <p class="sec-sub">From KLCI components to BTC/USD — all majors tracked with live yfinance data.</p>
+      <h2 class="sec-title">50+ Global & Malaysia Instruments</h2>
+      <p class="sec-sub">Real-time OHLCV data via yfinance. Log-returns computed automatically — models are directly comparable across all asset classes.</p>
     </div>
-
     <div class="asset-tabs">
-      <button class="asset-tab active" onclick="filterAssets('all')">All</button>
-      <button class="asset-tab" onclick="filterAssets('FX')">FX</button>
-      <button class="asset-tab" onclick="filterAssets('Commodities')">Commodities</button>
-      <button class="asset-tab" onclick="filterAssets('Indices')">Indices</button>
-      <button class="asset-tab" onclick="filterAssets('Global')">Global Stocks</button>
-      <button class="asset-tab" onclick="filterAssets('MY')">🇲🇾 MY Stocks</button>
-      <button class="asset-tab" onclick="filterAssets('Crypto')">Crypto</button>
+      <button class="asset-tab active" onclick="filterAssets('all',this)">All</button>
+      <button class="asset-tab" onclick="filterAssets('FX',this)">FX</button>
+      <button class="asset-tab" onclick="filterAssets('Commodities',this)">Commodities</button>
+      <button class="asset-tab" onclick="filterAssets('Indices',this)">Indices</button>
+      <button class="asset-tab" onclick="filterAssets('Global',this)">Global Stocks</button>
+      <button class="asset-tab" onclick="filterAssets('MY',this)">🇲🇾 MY Stocks</button>
+      <button class="asset-tab" onclick="filterAssets('Crypto',this)">Crypto</button>
     </div>
-
     <div class="asset-grid" id="assetGrid">
       <!-- FX -->
-      <div class="asset-card" data-cat="FX"><div class="ticker">USDMYR</div><div class="name">US Dollar / Malaysian Ringgit</div><span class="asset-cat-badge tag-blue">FX</span></div>
+      <div class="asset-card" data-cat="FX"><div class="ticker">USDMYR</div><div class="name">US Dollar / Malaysian Ringgit</div><span class="asset-cat-badge tag-blue">FX 🇲🇾</span></div>
       <div class="asset-card" data-cat="FX"><div class="ticker">EURUSD</div><div class="name">Euro / US Dollar</div><span class="asset-cat-badge tag-blue">FX</span></div>
       <div class="asset-card" data-cat="FX"><div class="ticker">GBPUSD</div><div class="name">British Pound / USD</div><span class="asset-cat-badge tag-blue">FX</span></div>
-      <div class="asset-card" data-cat="FX"><div class="ticker">USDJPY</div><div class="name">US Dollar / Japanese Yen</div><span class="asset-cat-badge tag-blue">FX</span></div>
+      <div class="asset-card" data-cat="FX"><div class="ticker">USDJPY</div><div class="name">USD / Japanese Yen</div><span class="asset-cat-badge tag-blue">FX</span></div>
       <div class="asset-card" data-cat="FX"><div class="ticker">AUDUSD</div><div class="name">Australian Dollar / USD</div><span class="asset-cat-badge tag-blue">FX</span></div>
       <div class="asset-card" data-cat="FX"><div class="ticker">USDSGD</div><div class="name">USD / Singapore Dollar</div><span class="asset-cat-badge tag-blue">FX</span></div>
       <div class="asset-card" data-cat="FX"><div class="ticker">USDCNY</div><div class="name">USD / Chinese Yuan</div><span class="asset-cat-badge tag-blue">FX</span></div>
@@ -404,16 +792,15 @@ footer{border-top:1px solid var(--border);padding:32px 0 max(24px,env(safe-area-
       <div class="asset-card" data-cat="Commodities"><div class="ticker">Silver</div><div class="name">Silver Futures</div><span class="asset-cat-badge tag-orange">Commodity</span></div>
       <div class="asset-card" data-cat="Commodities"><div class="ticker">Crude Oil</div><div class="name">WTI Crude Futures</div><span class="asset-cat-badge tag-orange">Commodity</span></div>
       <div class="asset-card" data-cat="Commodities"><div class="ticker">Brent Crude</div><div class="name">Brent Crude Futures</div><span class="asset-cat-badge tag-orange">Commodity</span></div>
-      <div class="asset-card" data-cat="Commodities"><div class="ticker">Palm Oil</div><div class="name">CPO Futures (KE=F)</div><span class="asset-cat-badge tag-orange">Commodity 🇲🇾</span></div>
+      <div class="asset-card" data-cat="Commodities"><div class="ticker">Palm Oil</div><div class="name">CPO Futures (KE=F) 🇲🇾</div><span class="asset-cat-badge tag-orange">Commodity</span></div>
       <div class="asset-card" data-cat="Commodities"><div class="ticker">Natural Gas</div><div class="name">Henry Hub Natgas</div><span class="asset-cat-badge tag-orange">Commodity</span></div>
-      <div class="asset-card" data-cat="Commodities"><div class="ticker">Copper</div><div class="name">Copper Futures (HG=F)</div><span class="asset-cat-badge tag-orange">Commodity</span></div>
-      <div class="asset-card" data-cat="Commodities"><div class="ticker">Platinum</div><div class="name">Platinum Futures</div><span class="asset-cat-badge tag-orange">Commodity</span></div>
+      <div class="asset-card" data-cat="Commodities"><div class="ticker">Copper</div><div class="name">Copper Futures</div><span class="asset-cat-badge tag-orange">Commodity</span></div>
       <!-- Indices -->
-      <div class="asset-card" data-cat="Indices"><div class="ticker">S&amp;P 500</div><div class="name">US Large Cap Index</div><span class="asset-cat-badge tag-purple">Index</span></div>
+      <div class="asset-card" data-cat="Indices"><div class="ticker">KLCI</div><div class="name">Bursa Malaysia Composite 🇲🇾</div><span class="asset-cat-badge tag-purple">Index</span></div>
+      <div class="asset-card" data-cat="Indices"><div class="ticker">S&amp;P 500</div><div class="name">US Large Cap (^GSPC)</div><span class="asset-cat-badge tag-purple">Index</span></div>
       <div class="asset-card" data-cat="Indices"><div class="ticker">Nasdaq 100</div><div class="name">US Tech Index</div><span class="asset-cat-badge tag-purple">Index</span></div>
-      <div class="asset-card" data-cat="Indices"><div class="ticker">KLCI (MY)</div><div class="name">Bursa Malaysia Composite</div><span class="asset-cat-badge tag-purple">Index 🇲🇾</span></div>
       <div class="asset-card" data-cat="Indices"><div class="ticker">Nikkei 225</div><div class="name">Japan Index</div><span class="asset-cat-badge tag-purple">Index</span></div>
-      <div class="asset-card" data-cat="Indices"><div class="ticker">Hang Seng</div><div class="name">Hong Kong Index</div><span class="asset-cat-badge tag-purple">Index</span></div>
+      <div class="asset-card" data-cat="Indices"><div class="ticker">Hang Seng</div><div class="name">Hong Kong (^HSI)</div><span class="asset-cat-badge tag-purple">Index</span></div>
       <div class="asset-card" data-cat="Indices"><div class="ticker">STI (SG)</div><div class="name">Singapore Index</div><span class="asset-cat-badge tag-purple">Index</span></div>
       <div class="asset-card" data-cat="Indices"><div class="ticker">FTSE 100</div><div class="name">UK Index</div><span class="asset-cat-badge tag-purple">Index</span></div>
       <div class="asset-card" data-cat="Indices"><div class="ticker">DAX</div><div class="name">Germany Index</div><span class="asset-cat-badge tag-purple">Index</span></div>
@@ -425,275 +812,84 @@ footer{border-top:1px solid var(--border);padding:32px 0 max(24px,env(safe-area-
       <div class="asset-card" data-cat="Global"><div class="ticker">TSLA</div><div class="name">Tesla</div><span class="asset-cat-badge tag-blue">Global Stock</span></div>
       <div class="asset-card" data-cat="Global"><div class="ticker">META</div><div class="name">Meta Platforms</div><span class="asset-cat-badge tag-blue">Global Stock</span></div>
       <!-- MY Stocks -->
-      <div class="asset-card" data-cat="MY"><div class="ticker">Maybank</div><div class="name">1155.KL — Banking</div><span class="asset-cat-badge tag-green">Bursa 🇲🇾</span></div>
-      <div class="asset-card" data-cat="MY"><div class="ticker">Public Bank</div><div class="name">1295.KL — Banking</div><span class="asset-cat-badge tag-green">Bursa 🇲🇾</span></div>
-      <div class="asset-card" data-cat="MY"><div class="ticker">Tenaga</div><div class="name">5347.KL — Utilities</div><span class="asset-cat-badge tag-green">Bursa 🇲🇾</span></div>
-      <div class="asset-card" data-cat="MY"><div class="ticker">CIMB</div><div class="name">1023.KL — Banking</div><span class="asset-cat-badge tag-green">Bursa 🇲🇾</span></div>
-      <div class="asset-card" data-cat="MY"><div class="ticker">Petronas Gas</div><div class="name">6033.KL — Energy</div><span class="asset-cat-badge tag-green">Bursa 🇲🇾</span></div>
-      <div class="asset-card" data-cat="MY"><div class="ticker">IHH Healthcare</div><div class="name">5225.KL — Healthcare</div><span class="asset-cat-badge tag-green">Bursa 🇲🇾</span></div>
-      <div class="asset-card" data-cat="MY"><div class="ticker">Press Metal</div><div class="name">8869.KL — Materials</div><span class="asset-cat-badge tag-green">Bursa 🇲🇾</span></div>
-      <div class="asset-card" data-cat="MY"><div class="ticker">Axiata</div><div class="name">6888.KL — Telecom</div><span class="asset-cat-badge tag-green">Bursa 🇲🇾</span></div>
+      <div class="asset-card" data-cat="MY"><div class="ticker">Maybank</div><div class="name">1155.KL · Banking 🇲🇾</div><span class="asset-cat-badge tag-green">Bursa</span></div>
+      <div class="asset-card" data-cat="MY"><div class="ticker">Public Bank</div><div class="name">1295.KL · Banking 🇲🇾</div><span class="asset-cat-badge tag-green">Bursa</span></div>
+      <div class="asset-card" data-cat="MY"><div class="ticker">Tenaga</div><div class="name">5347.KL · Utilities 🇲🇾</div><span class="asset-cat-badge tag-green">Bursa</span></div>
+      <div class="asset-card" data-cat="MY"><div class="ticker">CIMB</div><div class="name">1023.KL · Banking 🇲🇾</div><span class="asset-cat-badge tag-green">Bursa</span></div>
+      <div class="asset-card" data-cat="MY"><div class="ticker">Petronas Gas</div><div class="name">6033.KL · Energy 🇲🇾</div><span class="asset-cat-badge tag-green">Bursa</span></div>
+      <div class="asset-card" data-cat="MY"><div class="ticker">IHH Healthcare</div><div class="name">5225.KL · Healthcare 🇲🇾</div><span class="asset-cat-badge tag-green">Bursa</span></div>
+      <div class="asset-card" data-cat="MY"><div class="ticker">Press Metal</div><div class="name">8869.KL · Materials 🇲🇾</div><span class="asset-cat-badge tag-green">Bursa</span></div>
+      <div class="asset-card" data-cat="MY"><div class="ticker">Axiata</div><div class="name">6888.KL · Telecom 🇲🇾</div><span class="asset-cat-badge tag-green">Bursa</span></div>
       <!-- Crypto -->
       <div class="asset-card" data-cat="Crypto"><div class="ticker">Bitcoin</div><div class="name">BTC-USD</div><span class="asset-cat-badge tag-red">Crypto</span></div>
       <div class="asset-card" data-cat="Crypto"><div class="ticker">Ethereum</div><div class="name">ETH-USD</div><span class="asset-cat-badge tag-red">Crypto</span></div>
       <div class="asset-card" data-cat="Crypto"><div class="ticker">Solana</div><div class="name">SOL-USD</div><span class="asset-cat-badge tag-red">Crypto</span></div>
       <div class="asset-card" data-cat="Crypto"><div class="ticker">BNB</div><div class="name">BNB-USD</div><span class="asset-cat-badge tag-red">Crypto</span></div>
       <div class="asset-card" data-cat="Crypto"><div class="ticker">XRP</div><div class="name">XRP-USD</div><span class="asset-cat-badge tag-red">Crypto</span></div>
+      <div class="asset-card" data-cat="Crypto"><div class="ticker">Dogecoin</div><div class="name">DOGE-USD</div><span class="asset-cat-badge tag-red">Crypto</span></div>
     </div>
   </div>
 </section>
 
-<hr class="divider">
+<hr class="div">
 
-<!-- ════════════════ MODELS ════════════════ -->
-<section id="models">
-  <div class="wrap">
-    <div class="reveal">
-      <div class="sec-label">Model Catalogue</div>
-      <h2 class="sec-title">12 Forecasting Models</h2>
-      <p class="sec-sub">From classical econometrics to transformer attention — each model targets a different regime of market behaviour.</p>
-    </div>
-    <div class="model-grid reveal">
-
-      <div class="model-card g-stat">
-        <div class="mc-group">Statistical</div>
-        <div class="mc-name">ARIMA</div>
-        <div class="mc-desc">Auto order selection via AIC. Best for near-stationary series and short-horizon FX.</div>
-        <div class="mc-stat">95% confidence intervals</div>
-      </div>
-
-      <div class="model-card g-stat">
-        <div class="mc-group">Statistical</div>
-        <div class="mc-name">ETS · Holt Trend</div>
-        <div class="mc-desc">Exponential smoothing with damped trend. Robust to trending and seasonal series.</div>
-        <div class="mc-stat">Damped trend · AIC optimised</div>
-      </div>
-
-      <div class="model-card g-stat">
-        <div class="mc-group">Statistical</div>
-        <div class="mc-name">Prophet</div>
-        <div class="mc-desc">Meta's Prophet — handles holidays, changepoints and multi-scale seasonality natively.</div>
-        <div class="mc-stat">95% uncertainty bands</div>
-      </div>
-
-      <div class="model-card g-stat">
-        <div class="mc-group">Statistical</div>
-        <div class="mc-name">GARCH(1,1)</div>
-        <div class="mc-desc">Volatility clustering model. Produces forward volatility forecasts for risk budgeting.</div>
-        <div class="mc-stat">10-day vol forecast</div>
-      </div>
-
-      <div class="model-card g-dl">
-        <div class="mc-group">Deep Learning</div>
-        <div class="mc-name">LSTM</div>
-        <div class="mc-desc">Stacked 2-layer LSTM with dropout, gradient clipping and LR scheduling (PyTorch).</div>
-        <div class="mc-stat">Configurable hidden units</div>
-      </div>
-
-      <div class="model-card g-dl">
-        <div class="mc-group">Deep Learning</div>
-        <div class="mc-name">GRU</div>
-        <div class="mc-desc">Gated Recurrent Unit — lighter than LSTM, often converges faster on financial series.</div>
-        <div class="mc-stat">2-layer · gradient clipping</div>
-      </div>
-
-      <div class="model-card g-dl">
-        <div class="mc-group">Deep Learning</div>
-        <div class="mc-name">Transformer</div>
-        <div class="mc-desc">Encoder-only Transformer with positional encoding and multi-head self-attention.</div>
-        <div class="mc-stat">Attention-based sequence model</div>
-      </div>
-
-      <div class="model-card g-tree">
-        <div class="mc-group">Tree Models</div>
-        <div class="mc-name">XGBoost</div>
-        <div class="mc-desc">Gradient-boosted trees on recursive lag + rolling stat features. Fast and interpretable.</div>
-        <div class="mc-stat">n_estimators=300</div>
-      </div>
-
-      <div class="model-card g-tree">
-        <div class="mc-group">Tree Models</div>
-        <div class="mc-name">Random Forest</div>
-        <div class="mc-desc">Bootstrap-aggregated regression trees. Good baseline variance reducer.</div>
-        <div class="mc-stat">n_estimators=200 · parallel</div>
-      </div>
-
-      <div class="model-card g-hybrid">
-        <div class="mc-group">Hybrid</div>
-        <div class="mc-name">ARIMA + LSTM</div>
-        <div class="mc-desc">ARIMA captures linear structure; LSTM learns the nonlinear residuals.</div>
-        <div class="mc-stat">Decomposition approach</div>
-      </div>
-
-      <div class="model-card g-hybrid">
-        <div class="mc-group">Hybrid</div>
-        <div class="mc-name">ETS + GRU</div>
-        <div class="mc-desc">Holt-trend baseline extracts the trend signal; GRU corrects nonlinear deviations.</div>
-        <div class="mc-stat">Trend + residual split</div>
-      </div>
-
-      <div class="model-card g-hybrid">
-        <div class="mc-group">Hybrid</div>
-        <div class="mc-name">Prophet + XGBoost</div>
-        <div class="mc-desc">Prophet decomposes trend &amp; seasonality; XGBoost fits the remaining residuals.</div>
-        <div class="mc-stat">Seasonality + ML residuals</div>
-      </div>
-
-      <div class="model-card g-ens" style="grid-column:1/-1;max-width:560px;">
-        <div class="mc-group">🏆 Ensemble</div>
-        <div class="mc-name">Stacked Ensemble</div>
-        <div class="mc-desc">
-          Walk-forward cross-validation generates meta-training data from 6 base models
-          (ARIMA, ETS, LSTM, GRU, XGBoost, RF). A Ridge regression meta-learner
-          learns the optimal weighting — no look-ahead bias.
-        </div>
-        <div class="mc-stat">Ridge meta-learner · 6 base models · OOS stacking</div>
-      </div>
-
-    </div>
-  </div>
-</section>
-
-<hr class="divider">
-
-<!-- ════════════════ ARCHITECTURE ════════════════ -->
-<section id="architecture">
-  <div class="wrap">
-    <div class="reveal">
-      <div class="sec-label">Architecture</div>
-      <h2 class="sec-title">Project Structure</h2>
-    </div>
-    <div class="arch-box reveal">
-<pre>
-<span class="h">sammy-quant-lab/</span>
-│
-├── <span class="c">data_pipeline/</span>
-│   ├── ingestion.py         <span class="new">← 50+ instruments across 6 asset classes</span>
-│   ├── preprocessing.py     returns, log-returns
-│   └── features.py          MA, EMA, RSI, Bollinger, MACD, ATR, Stoch
-│
-├── <span class="c">models/</span>
-│   ├── statistical/
-│   │   ├── arima.py         Auto-ARIMA (AIC order selection)
-│   │   ├── garch.py         GARCH(1,1) volatility
-│   │   ├── ets.py           <span class="new">← NEW: ETS / Holt damped trend</span>
-│   │   └── prophet_model.py <span class="new">← NEW: Meta Prophet</span>
-│   │
-│   ├── ml/
-│   │   ├── lstm.py          Stacked LSTM (PyTorch)
-│   │   ├── gru.py           <span class="new">← NEW: GRU (PyTorch)</span>
-│   │   ├── transformer_model.py <span class="new">← NEW: Encoder Transformer</span>
-│   │   ├── xgboost_model.py <span class="new">← NEW: XGBoost recursive</span>
-│   │   └── random_forest.py <span class="new">← NEW: Random Forest</span>
-│   │
-│   ├── hybrid/
-│   │   ├── arima_lstm.py    ARIMA + LSTM residuals
-│   │   ├── ets_gru.py       <span class="new">← NEW: ETS + GRU residuals</span>
-│   │   └── prophet_xgb.py   <span class="new">← NEW: Prophet + XGBoost residuals</span>
-│   │
-│   └── ensemble/
-│       └── stacked.py       <span class="new">← NEW: Ridge stacked ensemble (6 base models)</span>
-│
-├── <span class="c">evaluation/</span>
-│   └── metrics.py           RMSE, MAE, MAPE, Direction Acc, Sharpe, MDD
-│
-├── <span class="c">dashboard/</span>
-│   └── app.py               <span class="new">← REDESIGNED: mobile-first, hamburger nav, all models</span>
-│
-├── index.html               <span class="new">← REDESIGNED: mobile-first landing page</span>
-├── main.py                  CLI runner
-└── requirements.txt         <span class="new">← updated dependencies</span>
-</pre>
-    </div>
-  </div>
-</section>
-
-<hr class="divider">
-
-<!-- ════════════════ METRICS ════════════════ -->
-<section id="metrics">
-  <div class="wrap">
-    <div class="reveal">
-      <div class="sec-label">Evaluation Framework</div>
-      <h2 class="sec-title">6 Performance Metrics</h2>
-    </div>
-    <div class="metrics-grid reveal">
-      <div class="metric-card"><div class="mk">RMSE</div><div class="mv">Root Mean Squared Error — heavily penalises large deviations</div></div>
-      <div class="metric-card"><div class="mk">MAE</div><div class="mv">Mean Absolute Error — average absolute price deviation</div></div>
-      <div class="metric-card"><div class="mk">MAPE</div><div class="mv">Mean Absolute % Error — relative accuracy across different price scales</div></div>
-      <div class="metric-card"><div class="mk">Direction Accuracy</div><div class="mv">% correct up/down calls. &gt;55% is meaningful; 50% = random</div></div>
-      <div class="metric-card"><div class="mk">Sharpe Ratio</div><div class="mv">Risk-adjusted return (annualised, 252 trading days)</div></div>
-      <div class="metric-card"><div class="mk">Max Drawdown</div><div class="mv">Largest peak-to-trough loss observed in the price series</div></div>
-    </div>
-  </div>
-</section>
-
-<hr class="divider">
-
-<!-- ════════════════ MALAYSIA EDUCATION ════════════════ -->
+<!-- ═══════════════════ MALAYSIA EDUCATION ═══════════════════ -->
 <section id="education">
   <div class="wrap">
     <div class="reveal">
-      <div class="sec-label">📚 Malaysia Financial Education · Pendidikan Kewangan Malaysia</div>
-      <h2 class="sec-title">Built for Malaysian Investors &amp; Analysts</h2>
-      <p class="sec-sub">Understanding model output in the context of Malaysian markets. Memahami output model dalam konteks pasaran Malaysia.</p>
+      <div class="sec-label">📚 Pendidikan Kewangan Malaysia</div>
+      <h2 class="sec-title">Built for Malaysian Investors & Analysts</h2>
+      <p class="sec-sub">Interpreting log-return models in the context of Malaysian markets.</p>
     </div>
     <div class="edu-grid reveal">
-
-      <div class="edu-card">
-        <div class="edu-icon">🏦</div>
-        <div class="edu-title">Bank Negara &amp; USDMYR</div>
-        <div class="edu-body">BNM monetary policy directly affects the ringgit. Models cannot predict policy decisions — always check BNM announcements.</div>
-        <div class="edu-bm">Dasar monetari BNM mempengaruhi nilai ringgit secara langsung.</div>
-      </div>
-
-      <div class="edu-card">
-        <div class="edu-icon">🛢</div>
-        <div class="edu-title">Oil &amp; Palm Oil (CPO)</div>
-        <div class="edu-body">Malaysia is a net oil exporter. Crude and CPO prices are key macro drivers for USDMYR, KLCI, and energy stocks.</div>
-        <div class="edu-bm">Harga minyak mentah dan CPO mempengaruhi USDMYR dan KLCI.</div>
-      </div>
-
-      <div class="edu-card">
-        <div class="edu-icon">🇨🇳</div>
-        <div class="edu-title">China Correlation</div>
-        <div class="edu-body">KLCI and MYR are heavily correlated with Chinese economic data — Hang Seng and CNY are useful leading indicators.</div>
-        <div class="edu-bm">KLCI dan MYR berkait rapat dengan ekonomi China.</div>
-      </div>
-
       <div class="edu-card">
         <div class="edu-icon">📉</div>
-        <div class="edu-title">Interpreting Direction Accuracy</div>
-        <div class="edu-body">50% = random guess. A model above 55% consistently has predictive edge. Use this metric more than RMSE for trading signals.</div>
-        <div class="edu-bm">Ketepatan arah &gt;55% menunjukkan kelebihan ramalan yang bermakna.</div>
+        <div class="edu-title">Why Log-Returns?</div>
+        <div class="edu-body">Log-returns are additive, stationary, and unit-free — making them directly comparable between USDMYR and BTC. Raw price levels are non-stationary and mislead models.</div>
+        <div class="edu-bm">Pulangan log adalah pegun dan boleh dibandingkan merentasi semua aset.</div>
       </div>
-
       <div class="edu-card">
-        <div class="edu-icon">💰</div>
-        <div class="edu-title">Bursa Stocks — Dividends Matter</div>
-        <div class="edu-body">Price-only models miss dividend yield. Maybank and Public Bank are well-known for high yields — factor this in separately.</div>
-        <div class="edu-bm">Model harga sahaja mengabaikan hasil dividen — pertimbangkan secara berasingan.</div>
+        <div class="edu-icon">🏦</div>
+        <div class="edu-title">BNM & USDMYR</div>
+        <div class="edu-body">Bank Negara Malaysia policy directly moves the ringgit. No statistical test can predict BNM intervention. Always layer macro analysis on top of model output.</div>
+        <div class="edu-bm">Dasar BNM mempengaruhi MYR secara langsung — model tidak boleh meramalkan ini.</div>
       </div>
-
+      <div class="edu-card">
+        <div class="edu-icon">🛢</div>
+        <div class="edu-title">Oil & Palm Oil (CPO)</div>
+        <div class="edu-body">Malaysia is a net oil exporter. Crude oil and CPO prices are key drivers of USDMYR, KLCI, and Bursa energy stocks. Granger causality tests may reveal these linkages.</div>
+        <div class="edu-bm">Harga minyak dan CPO mempengaruhi USDMYR dan KLCI — Granger boleh mengesahkan ini.</div>
+      </div>
+      <div class="edu-card">
+        <div class="edu-icon">🎯</div>
+        <div class="edu-title">Hit Ratio vs Direction Accuracy</div>
+        <div class="edu-body">On log-returns, hit ratio = fraction of periods where predicted sign matches actual sign. >50% beats random; >55% has practical trading value. This is your key metric for signal quality.</div>
+        <div class="edu-bm">Nisbah hit >55% menunjukkan isyarat arah yang bermakna untuk dagangan.</div>
+      </div>
+      <div class="edu-card">
+        <div class="edu-icon">📈</div>
+        <div class="edu-title">Sortino over Sharpe</div>
+        <div class="edu-body">Malaysian financial returns — especially Bursa stocks — have fat tails and negative skew. Sortino Ratio only penalises bad downside, making it more appropriate than Sharpe here.</div>
+        <div class="edu-bm">Nisbah Sortino lebih sesuai untuk pulangan berat-ekor seperti saham Bursa.</div>
+      </div>
       <div class="edu-card">
         <div class="edu-icon">⚠️</div>
         <div class="edu-title">Model Limitations</div>
-        <div class="edu-body">No ML model captures geopolitical risk, BNM intervention, or surprise macro events. Always layer qualitative analysis on top.</div>
-        <div class="edu-bm">Model ML tidak dapat meramalkan risiko geopolitik atau intervensi BNM.</div>
+        <div class="edu-body">No model captures geopolitical risk, BNM intervention, or surprise macro events. The Random Walk benchmark is a reality check — if your model barely beats it, be cautious.</div>
+        <div class="edu-bm">Model tidak dapat meramalkan risiko geopolitik atau kejutan makroekonomi.</div>
       </div>
-
     </div>
   </div>
 </section>
 
-<hr class="divider">
+<hr class="div">
 
-<!-- ════════════════ CTA ════════════════ -->
+<!-- ═══════════════════ CTA ═══════════════════ -->
 <section>
   <div class="wrap">
     <div class="cta-box reveal">
       <h2>Try it live — free, no login</h2>
-      <p>Run any model on any of 50+ instruments directly in your browser. Works on mobile too.</p>
+      <p>Run any model on any of 50+ instruments. Includes statistical tests, Granger feature selection, multi-model comparison, and equity simulation.</p>
       <div class="cta-btns">
         <a href="https://sammy-quant-lab.streamlit.app" class="btn btn-primary" target="_blank">▶ Open Dashboard</a>
         <a href="https://github.com/SamOliverAreh/sammy-quant-lab" class="btn btn-secondary" target="_blank">⭐ GitHub</a>
@@ -702,13 +898,13 @@ footer{border-top:1px solid var(--border);padding:32px 0 max(24px,env(safe-area-
   </div>
 </section>
 
-<!-- ════════════════ FOOTER ════════════════ -->
+<!-- ═══════════════════ FOOTER ═══════════════════ -->
 <footer>
   <div class="wrap">
     <div class="footer-inner">
       <div>
         <div class="footer-logo">⚡ Sammy Quant Lab</div>
-        <div style="font-size:.75rem;color:var(--muted);margin-top:4px;">Multi-Asset Forecasting Engine v3.0</div>
+        <div style="font-size:.74rem;color:var(--muted);margin-top:4px;">Multi-Asset Log-Returns Forecasting Engine v4.0</div>
       </div>
       <div class="footer-links">
         <a href="https://sammy-quant-lab.streamlit.app" target="_blank">Dashboard</a>
@@ -716,54 +912,65 @@ footer{border-top:1px solid var(--border);padding:32px 0 max(24px,env(safe-area-
         <a href="https://www.linkedin.com/in/sam-oliver-areh/" target="_blank">LinkedIn</a>
         <a href="https://samoliverareh.github.io/sammy-quant-lab/" target="_blank">Portfolio</a>
       </div>
-      <div class="footer-disclaimer">
-        ⚠️ Educational &amp; portfolio use only. Not financial advice. Always do your own research before investing. Bukan nasihat kewangan.
-      </div>
+      <div class="footer-disc">⚠️ Educational & portfolio use only. Not financial advice. Bukan nasihat kewangan.</div>
     </div>
   </div>
 </footer>
 
-<!-- ════════════════ JS ════════════════ -->
+<!-- ═══════════════════ JS ═══════════════════ -->
 <script>
-// ── Hamburger ────────────────────────────────────────────────────────────────
-const hamBtn  = document.getElementById('hamBtn');
-const drawer  = document.getElementById('drawer');
-function closeDrawer(){
+// ── Dark / Light toggle ───────────────────────────────────────────────────────
+const html      = document.documentElement;
+const themeBtn  = document.getElementById('themeBtn');
+
+function setTheme(dark) {
+  html.setAttribute('data-theme', dark ? 'dark' : 'light');
+  themeBtn.textContent = dark ? '☀️' : '🌙';
+  localStorage.setItem('ql-theme', dark ? 'dark' : 'light');
+}
+
+// Restore saved theme
+const saved = localStorage.getItem('ql-theme');
+setTheme(saved ? saved === 'dark' : true);
+
+themeBtn.addEventListener('click', () => {
+  setTheme(html.getAttribute('data-theme') === 'light');
+});
+
+// ── Hamburger ─────────────────────────────────────────────────────────────────
+const hamBtn = document.getElementById('hamBtn');
+const drawer = document.getElementById('drawer');
+
+function closeDrawer() {
   hamBtn.classList.remove('open');
   drawer.classList.remove('open');
-  document.body.style.overflow='';
+  document.body.style.overflow = '';
 }
-hamBtn.addEventListener('click',()=>{
+
+hamBtn.addEventListener('click', () => {
   const open = hamBtn.classList.toggle('open');
-  drawer.classList.toggle('open',open);
+  drawer.classList.toggle('open', open);
   document.body.style.overflow = open ? 'hidden' : '';
 });
-// Close drawer on outside click
-document.addEventListener('click',e=>{
-  if(!hamBtn.contains(e.target)&&!drawer.contains(e.target)) closeDrawer();
+
+document.addEventListener('click', e => {
+  if (!hamBtn.contains(e.target) && !drawer.contains(e.target)) closeDrawer();
 });
 
-// ── Asset filter ─────────────────────────────────────────────────────────────
-function filterAssets(cat){
-  document.querySelectorAll('.asset-tab').forEach(b=>{
-    b.classList.toggle('active', b.textContent.trim().replace('🇲🇾 ','') === cat ||
-      (cat==='all' && b.textContent.trim()==='All'));
-  });
-  document.querySelectorAll('.asset-card').forEach(c=>{
-    c.style.display = (cat==='all'||c.dataset.cat===cat) ? '' : 'none';
+// ── Asset filter ──────────────────────────────────────────────────────────────
+function filterAssets(cat, btn) {
+  document.querySelectorAll('.asset-tab').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  document.querySelectorAll('.asset-card').forEach(c => {
+    c.style.display = (cat === 'all' || c.dataset.cat === cat) ? '' : 'none';
   });
 }
 
-// ── Scroll reveal ────────────────────────────────────────────────────────────
-const io = new IntersectionObserver(entries=>{
-  entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('visible'); });
-},{threshold:.1});
-document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
-
-// ── Smooth close on drawer link clicks ───────────────────────────────────────
-drawer.querySelectorAll('a[href^="#"]').forEach(a=>{
-  a.addEventListener('click',()=>setTimeout(closeDrawer,100));
-});
+// ── Scroll reveal ─────────────────────────────────────────────────────────────
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => io.observe(el));
 </script>
 </body>
 </html>
