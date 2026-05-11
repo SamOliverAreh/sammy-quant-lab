@@ -1,7 +1,4 @@
-"""
-Prophet forecasting model (Meta/Facebook).
-Handles trend, seasonality, holidays automatically.
-"""
+"""Prophet — multivariate exog support via additional_regressors."""
 import numpy as np
 import pandas as pd
 import warnings
@@ -18,41 +15,36 @@ except ImportError:
         PROPHET_AVAILABLE = False
 
 
-def prophet_forecast(series: pd.Series, steps: int = 30, freq: str = "B") -> tuple:
-    """
-    Fit Prophet model and return (predictions, lower, upper, components_df).
-
-    Args:
-        series: pd.Series with DatetimeIndex
-        steps:  forecast horizon (business days by default)
-        freq:   pandas frequency string for future dates
-
-    Returns:
-        pred (np.ndarray), lower (np.ndarray), upper (np.ndarray), forecast_df (pd.DataFrame)
-    """
+def prophet_forecast(series: pd.Series, steps: int = 30,
+                     freq: str = "B", exog: pd.DataFrame = None):
     if not PROPHET_AVAILABLE:
-        raise ImportError("prophet not installed. Run: pip install prophet")
+        raise ImportError("prophet not installed")
 
     df_p = pd.DataFrame({"ds": series.index, "y": series.values}).reset_index(drop=True)
+    exog_cols = []
 
-    model = Prophet(
-        yearly_seasonality=True,
-        weekly_seasonality=True,
-        daily_seasonality=False,
-        changepoint_prior_scale=0.05,
-        seasonality_prior_scale=10,
-        interval_width=0.95,
-        uncertainty_samples=200,
-    )
+    if exog is not None and len(exog.columns) > 0:
+        common       = series.index.intersection(exog.index)
+        exog_aligned = exog.loc[common].reset_index(drop=True)
+        df_p         = df_p.iloc[:len(exog_aligned)].copy()
+        for col in exog.columns:
+            df_p[col] = exog_aligned[col].values
+            exog_cols.append(col)
+
+    model = Prophet(yearly_seasonality=True, weekly_seasonality=True,
+                    daily_seasonality=False, changepoint_prior_scale=0.05,
+                    interval_width=0.95, uncertainty_samples=200)
+    for col in exog_cols:
+        model.add_regressor(col)
     model.fit(df_p)
 
     future = model.make_future_dataframe(periods=steps, freq=freq)
-    forecast = model.predict(future)
+    for col in exog_cols:
+        future[col] = float(df_p[col].iloc[-1])  # flat extrapolation
 
+    forecast  = model.predict(future)
     future_fc = forecast.tail(steps)
-    pred  = future_fc["yhat"].values
-    lower = future_fc["yhat_lower"].values
-    upper = future_fc["yhat_upper"].values
-
-    return pred, lower, upper, future_fc[["ds", "yhat", "yhat_lower", "yhat_upper", "trend"]]
-    
+    return (future_fc["yhat"].values,
+            future_fc["yhat_lower"].values,
+            future_fc["yhat_upper"].values,
+            future_fc[["ds","yhat","yhat_lower","yhat_upper","trend"]])
