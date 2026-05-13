@@ -747,59 +747,89 @@ with st.expander("ℹ️ How to read ADF + KPSS together"):
 *ADF H₀: series has a unit root (non-stationary). KPSS H₀: series is stationary. These are opposite null hypotheses.*
     """)
 
-# Test result cards
-def test_cls(reject, positive_means_reject):
-    if positive_means_reject:
-        return "test-green" if reject else "test-amber"
-    else:
-        return "test-amber" if reject else "test-green"
+# ── tbox: render one test result card ────────────────────────────────────────
+def tbox(r, positive_means_reject=True):
+    """
+    Render a styled test result card.
+    positive_means_reject=True:  green when reject_H0 (ADF, LjungBox, ARCH-LM)
+    positive_means_reject=False: green when fail-to-reject (KPSS, JarqueBera)
+    """
+    reject  = r.get("reject_H0", False)
+    p_disp  = r.get("p_display") or r.get("lm_p_display") or str(
+                round(r.get("p_value") or r.get("lm_p_value", 1.0), 4))
+    stat    = r.get("statistic") or r.get("lm_statistic", 0.0)
+    h0      = r.get("H0", "")
+    conc    = r.get("conclusion", "")
+    interp  = r.get("interpretation", "")
+    p_note  = r.get("p_note", "")
+    p_warn  = r.get("p_bound_warning", "")
 
+    # Colour: green = good result (series is stationary / test confirms expectation)
+    if positive_means_reject:
+        css = "test-green" if reject else "test-amber"
+    else:
+        css = "test-green" if not reject else "test-amber"
+
+    # KPSS: show stat vs critical values prominently
+    kpss_crits = ""
+    if "crit_5pct" in r and "crit_10pct" in r:
+        kpss_crits = (f"<br><small>Critical values: 10%={r.get('crit_10pct','—')} · "
+                      f"5%={r.get('crit_5pct','—')} · "
+                      f"2.5%={r.get('crit_2_5pct', r.get('crit_5pct','—'))} · "
+                      f"1%={r.get('crit_1pct','—')}</small>")
+
+    p_warn_html = (f"<br><small style='color:#ff9500;'>{p_warn}</small>"
+                   if p_warn else "")
+
+    return (
+        f'<div class="test-box {css}">'
+        f'<b>{r["test"]}</b><br>'
+        f'<small>H₀: {h0}</small><br>'
+        f'stat = {float(stat):.4f} &nbsp;·&nbsp; p = {p_disp}'
+        f'{kpss_crits}'
+        f'{p_warn_html}'
+        f'<br><b>{conc}</b>'
+        f'<br><small>{interp}</small>'
+        f'<br><small style="opacity:.7;">{p_note}</small>'
+        f'</div>'
+    )
+
+# Test result cards
 co1, co2 = st.columns(2)
 with co1:
-    for key, pos_reject in [("ADF", True), ("LjungBox", True), ("ARCHLM", True)]:
-        r  = tests[key]
-        p  = r.get("p_value") or r.get("lm_p_value", 1.0)
-        st_ = r.get("statistic") or r.get("lm_statistic", 0.0)
-        h0  = r.get("H0", "")
-        cls = test_cls(r["reject_H0"], pos_reject)
-        st.markdown(
-            f'<div class="test-box {cls}"><b>{r["test"]}</b><br>'
-            f'<small>H₀: {h0}</small><br>'
-            f'stat={st_:.4f} &nbsp; p={p:.4f}<br>'
-            f'<b>{r["conclusion"]}</b><br>'
-            f'<small>{r["interpretation"]}</small></div>',
-            unsafe_allow_html=True)
+    st.markdown(tbox(tests["ADF"],       positive_means_reject=True),  unsafe_allow_html=True)
+    st.markdown(tbox(tests["LjungBox"],  positive_means_reject=True),  unsafe_allow_html=True)
+    st.markdown(tbox(tests["ARCHLM"],    positive_means_reject=True),  unsafe_allow_html=True)
 with co2:
-    for key, pos_reject in [("KPSS", False), ("JarqueBera", False)]:
-        r   = tests[key]
-        p   = r.get("p_value", 1.0)
-        st_ = r.get("statistic", 0.0)
-        h0  = r.get("H0", "")
-        cls = test_cls(r["reject_H0"], pos_reject)
-        st.markdown(
-            f'<div class="test-box {cls}"><b>{r["test"]}</b><br>'
-            f'<small>H₀: {h0}</small><br>'
-            f'stat={st_:.4f} &nbsp; p={p:.4f}<br>'
-            f'<b>{r["conclusion"]}</b><br>'
-            f'<small>{r["interpretation"]}</small></div>',
-            unsafe_allow_html=True)
+    st.markdown(tbox(tests["KPSS"],      positive_means_reject=False), unsafe_allow_html=True)
+    st.markdown(tbox(tests["JarqueBera"],positive_means_reject=False), unsafe_allow_html=True)
 
 # Summary table
 st.markdown("**Test Summary Table**")
 summary_rows = []
 for key in ["ADF","KPSS","LjungBox","JarqueBera","ARCHLM"]:
-    r  = tests[key]
-    p  = r.get("p_value") or r.get("lm_p_value", 1.0)
-    st_= r.get("statistic") or r.get("lm_statistic", 0.0)
+    r    = tests[key]
+    stat = r.get("statistic") or r.get("lm_statistic", 0.0)
+    p_disp = r.get("p_display") or r.get("lm_p_display") or str(
+        round(r.get("p_value") or r.get("lm_p_value", 1.0), 4))
+    bound = "⚠️ Bounded [0.01,0.10]" if r.get("p_bound_warning") else "Exact"
     summary_rows.append({
-        "Test":       r["test"],
-        "H₀":         r.get("H0","—"),
-        "Statistic":  round(float(st_), 4),
-        "p-value":    round(float(p), 4),
-        "Reject H₀":  "✅ Yes" if r["reject_H0"] else "❌ No",
-        "Conclusion": r["conclusion"],
+        "Test":         r["test"],
+        "H₀":           r.get("H0","—"),
+        "Statistic":    round(float(stat), 4),
+        "p-value":      p_disp,
+        "p-value Type": bound,
+        "Reject H₀":   "✅ Yes" if r["reject_H0"] else "❌ No",
+        "Conclusion":   r["conclusion"],
+        "Decision Basis": ("stat vs crit" if key == "KPSS" else "p vs α=0.05"),
     })
 st.dataframe(pd.DataFrame(summary_rows), use_container_width=True, hide_index=True)
+st.caption(
+    "⚠️ KPSS p-values are bounded to [0.01, 0.10] by statsmodels — compare statistic "
+    "to critical values directly (shown in the test card above) for the correct decision. "
+    "ADF p ≈ 0.0000 for log-returns is correct and expected — it reflects overwhelming "
+    "evidence of stationarity, not a numerical error."
+)
 
 st.markdown("---")
 
