@@ -61,6 +61,7 @@ from models.ensemble.stacked     import stacked_ensemble_forecast
 # ── Evaluation ────────────────────────────────────────────────────────────────
 from evaluation.metrics import (
     evaluate_all, build_comparison_table, random_walk_forecast,
+    random_walk_insample_with_tail,
     sharpe_ratio, sortino_ratio, calmar_ratio, sterling_ratio,
     information_ratio, max_drawdown, max_drawdown_duration,
     mean_daily_drawdown, median_daily_drawdown, ulcer_index,
@@ -235,7 +236,24 @@ html,body,[class*="css"],.main,.stApp{{font-family:'Outfit',sans-serif!important
 .main .block-container{{background:{B}!important;padding-top:1.2rem!important;}}
 section[data-testid="stSidebar"]{{background:{S1}!important;border-right:1px solid {BD}!important;}}
 section[data-testid="stSidebar"] *{{color:{TX}!important;}}
+section[data-testid="stSidebar"] p,
+section[data-testid="stSidebar"] span,
+section[data-testid="stSidebar"] label,
+section[data-testid="stSidebar"] div{{color:{TX}!important;}}
 section[data-testid="stSidebar"] .stSelectbox>div>div{{background:{IB}!important;color:{TX}!important;border-color:{BD2}!important;}}
+section[data-testid="stSidebar"] div[data-baseweb="select"]>div{{background:{IB}!important;color:{TX}!important;border-color:{BD2}!important;}}
+section[data-testid="stSidebar"] div[data-baseweb="select"] span{{color:{TX}!important;}}
+section[data-testid="stSidebar"] div[data-baseweb="tag"]{{background:{BD2}!important;color:{TX}!important;}}
+section[data-testid="stSidebar"] div[data-baseweb="tag"] span{{color:{TX}!important;}}
+section[data-testid="stSidebar"] div[data-testid="stMultiSelect"]>div{{background:{IB}!important;border-color:{BD2}!important;}}
+section[data-testid="stSidebar"] div[data-testid="stMultiSelect"] span{{color:{TX}!important;}}
+section[data-testid="stSidebar"] input{{color:{TX}!important;background:{IB}!important;}}
+section[data-testid="stSidebar"] div[data-baseweb="select"]>div{{background:{IB}!important;color:{TX}!important;border-color:{BD2}!important;}}
+section[data-testid="stSidebar"] div[data-baseweb="select"] span{{color:{TX}!important;}}
+section[data-testid="stSidebar"] div[data-baseweb="tag"]{{background:{BD2}!important;color:{TX}!important;}}
+section[data-testid="stSidebar"] div[data-baseweb="tag"] span{{color:{TX}!important;}}
+section[data-testid="stSidebar"] div[data-testid="stMultiSelect"] div{{background:{IB}!important;}}
+section[data-testid="stSidebar"] div[data-testid="stMultiSelect"] span{{color:{TX}!important;}}
 header[data-testid="stHeader"]{{background:{S1}!important;border-bottom:1px solid {BD}!important;}}
 header[data-testid="stHeader"] *{{color:{TX}!important;background:{S1}!important;}}
 .stDeployButton{{display:none;}}
@@ -280,9 +298,25 @@ h1,h2,h3,h4,h5,p,li,span,label{{color:{TX};}}
 .stDateInput label,.stNumberInput label{{color:{MU}!important;font-size:.82rem!important;}}
 .stSelectbox>div>div{{background:{IB}!important;color:{TX}!important;border-color:{BD2}!important;}}
 div[data-baseweb="select"]>div{{background:{IB}!important;color:{TX}!important;border-color:{BD2}!important;}}
+div[data-baseweb="select"] span{{color:{TX}!important;}}
+div[data-baseweb="select"] input{{color:{TX}!important;background:{IB}!important;}}
+div[data-baseweb="popover"]{{background:{S1}!important;}}
 div[data-baseweb="popover"] ul{{background:{S1}!important;color:{TX}!important;}}
-div[data-baseweb="popover"] li:hover{{background:{BD}!important;}}
+div[data-baseweb="popover"] li{{background:{S1}!important;color:{TX}!important;}}
+div[data-baseweb="popover"] li:hover{{background:{BD}!important;color:{TX}!important;}}
+/* Multiselect tags */
+div[data-baseweb="tag"]{{background:{BD2}!important;color:{TX}!important;}}
+div[data-baseweb="tag"] span{{color:{TX}!important;}}
+span[data-baseweb="tag"]{{background:{BD2}!important;color:{TX}!important;}}
+/* MultiSelect container */
+div[data-testid="stMultiSelect"]>div{{background:{IB}!important;border-color:{BD2}!important;}}
+div[data-testid="stMultiSelect"] span{{color:{TX}!important;}}
+div[data-testid="stMultiSelect"] input{{color:{TX}!important;}}
+div[data-testid="stMultiSelect"] div[data-baseweb="select"]>div{{background:{IB}!important;}}
 div[data-testid="stRadio"] label,div[data-testid="stCheckbox"] label{{color:{TX}!important;}}
+/* Radio buttons themselves */
+div[data-testid="stRadio"] div[role="radiogroup"] label{{color:{TX}!important;}}
+div[data-testid="stCheckbox"] div label p{{color:{TX}!important;}}
 div[data-testid="stDateInput"] input{{background:{IB}!important;color:{TX}!important;border-color:{BD2}!important;}}
 div[data-testid="stMetric"]{{background:{IB}!important;border:1px solid {BD}!important;border-radius:10px!important;padding:13px!important;}}
 div[data-testid="stMetric"] label{{color:{MU}!important;}}
@@ -291,6 +325,10 @@ div[data-testid="stMetric"] div[data-testid="stMetricValue"]{{color:{AC}!importa
 .stDataFrame table,.stDataFrame th,.stDataFrame td{{background:{TB}!important;color:{TX}!important;border-color:{BD}!important;}}
 .stDataFrame thead tr th{{background:{TH}!important;color:{TX}!important;font-weight:600;}}
 .stDataFrame tbody tr:hover td{{background:{BD}!important;}}
+/* Streamlit DataFrame iframe — covers light mode inner table */
+[data-testid="stDataFrame"] iframe{{background:{TB}!important;}}
+[data-testid="stDataFrame"] .dvn-scroller{{background:{TB}!important;}}
+[data-testid="stDataFrame"] canvas{{filter:{"none" if dark else "invert(0)"};}}
 div[data-testid="stTabs"] button{{background:{"#090d1c" if dark else "#f0f4f8"}!important;color:{MU}!important;border-bottom:2px solid transparent!important;font-weight:600;}}
 div[data-testid="stTabs"] button[aria-selected="true"]{{background:{S1}!important;color:{AC}!important;border-bottom:2px solid {AC}!important;}}
 div[data-testid="stTabContent"]{{background:{B}!important;border:1px solid {BD}!important;border-top:none!important;border-radius:0 0 10px 10px!important;padding:12px!important;}}
@@ -1023,11 +1061,14 @@ for i, mn in enumerate(selected_models):
 
         elif mn == "Prophet" and PROPHET_AVAILABLE:
             from models.statistical.prophet_model import prophet_forecast
-            fc, _, _, _ = prophet_forecast(s_lr_model, steps=forecast_steps, exog=ex)
+            _pfreq = "D" if cat_choice == "Crypto" else None  # auto-detect for others
+            fc, _, _, _ = prophet_forecast(s_lr_model, steps=forecast_steps,
+                                            freq=_pfreq, exog=ex)
             mforecasts[mn] = fc
             minsample[mn]  = (np.zeros(5), np.zeros(5))
             if train_bt is not None:
-                bt, _, _, _ = prophet_forecast(train_bt, steps=forecast_steps, exog=exog_bt)
+                bt, _, _, _ = prophet_forecast(train_bt, steps=forecast_steps,
+                                               freq=_pfreq, exog=exog_bt)
                 mbt_preds[mn] = bt
 
         # ── ML ────────────────────────────────────────────────────────────────
@@ -1265,15 +1306,22 @@ with t_px_fc:
     st.plotly_chart(fpx, use_container_width=True)
 
 # Forecast table
-with st.expander("📋 Forecast Table — Reconstructed Price"):
-    tbl = {"Date": [d.date() for d in fc_dates[:forecast_steps]]}
-    for mn, fc in mforecasts.items():
-        px  = logret_to_price(fc, last_px)
-        n   = min(forecast_steps, len(px))
-        chg = [(v - last_px) / last_px * 100 for v in px[:n]]
-        tbl[f"{mn} Price"]  = [f"{v:.4f}" for v in px[:n]]  + ["—"] * (forecast_steps - n)
-        tbl[f"{mn} Chg%"]   = [f"{c:+.2f}%" for c in chg]   + ["—"] * (forecast_steps - n)
-    st.dataframe(pd.DataFrame(tbl), use_container_width=True, hide_index=True)
+with st.expander("📋 Forecast Table — Reconstructed Price & Log-Returns"):
+    fc_rows = []
+    for d_idx, d in enumerate(fc_dates[:forecast_steps]):
+        row = {"Day": d_idx + 1, "Date": d.date()}
+        for mn, fc in mforecasts.items():
+            if d_idx < len(fc):
+                lr_val = float(fc[d_idx])
+                px_val = last_px * np.exp(np.sum(fc[:d_idx+1]))
+                row[f"{mn} LogRet"] = f"{lr_val:+.5f}"
+                row[f"{mn} Price"]  = f"{px_val:.4f}"
+                row[f"{mn} Chg%"]   = f"{(px_val - last_px)/last_px*100:+.2f}%"
+        fc_rows.append(row)
+    st.caption(f"Base price (last observed): {last_px:.4f} · "
+               f"Forecast horizon: {forecast_steps} days · "
+               f"Models: {len(mforecasts)}")
+    st.dataframe(pd.DataFrame(fc_rows), use_container_width=True, hide_index=True)
 
 st.markdown("---")
 
@@ -1286,7 +1334,10 @@ st.markdown('<div class="sec-hdr">📐 Backtest & Evaluation — vs Random Walk 
 if train_bt is None or true_bt is None:
     st.warning("Not enough data for backtesting (need >80 obs).")
 else:
-    rw_pred = random_walk_forecast(train_bt, forecast_steps)
+    # True Random Walk: y_hat_t = y_{t-1} (lag-1 of actuals, not a flat line)
+    # train_tail = last log-return from training window
+    train_tail_val = float(train_bt.iloc[-1])
+    rw_pred = random_walk_insample_with_tail(train_tail_val, true_bt.values)
 
     fig_bt = go.Figure()
     fig_bt.add_trace(go.Scatter(
@@ -1310,6 +1361,7 @@ else:
     comp_df = build_comparison_table(
         y_true=true_bt.values,
         model_preds=dict(mbt_preds),
+        train_tail=float(train_bt.iloc[-1]),
         benchmark_returns=true_bt.values,
         is_returns=True,
     )
@@ -1318,6 +1370,10 @@ else:
 
     # DM tests
     if len(mbt_preds) > 1:
+        def rmse_val(yt, yp):
+            n = min(len(yt), len(yp))
+            return float(np.sqrt(np.mean((np.array(yt[:n]) - np.array(yp[:n]))**2)))
+
         with st.expander("🔬 Diebold-Mariano Pairwise Significance Tests"):
             st.caption("H₀: Equal predictive accuracy. p<0.05 → statistically significant difference.")
             dm_rows = []
@@ -1329,10 +1385,16 @@ else:
                     dm   = diebold_mariano(true_bt.values[:n],
                                            mbt_preds[a][:n], mbt_preds[b][:n])
                     dm_rows.append({
-                        "Model A": a, "Model B": b,
-                        "DM stat": dm["dm_statistic"],
-                        "p-value": dm["p_value"],
-                        "Result":  dm["conclusion"],
+                        "Model A":       a,
+                        "Model B":       b,
+                        "DM statistic":  dm["dm_statistic"],
+                        "p-value":       dm["p_value"],
+                        "Sig. (α=0.05)": "✅ Yes" if dm["p_value"] < 0.05 else "❌ No",
+                        "Conclusion":    dm["conclusion"],
+                        "RMSE A":        round(rmse_val(true_bt.values, mbt_preds[a]), 6)
+                                         if a in mbt_preds else "—",
+                        "RMSE B":        round(rmse_val(true_bt.values, mbt_preds[b]), 6)
+                                         if b in mbt_preds else "—",
                     })
             if dm_rows:
                 st.dataframe(pd.DataFrame(dm_rows), use_container_width=True, hide_index=True)
@@ -1357,7 +1419,7 @@ if train_bt is not None and true_bt is not None and mbt_preds:
                                          width=2, dash="dot")))
 
     rw_ec = equity_curve_with_tc(
-        true_bt.values, rw_pred[:len(true_bt)], tc_rate=tc_rate,
+        true_bt.values, rw_pred, tc_rate=tc_rate,
         garch_vol=(gvol[:len(true_bt)] if (use_garch_sz and gvol is not None) else None),
         vol_target=vol_target)
     fig_eq.add_trace(go.Scatter(y=rw_ec["equity"], name="Random Walk",
@@ -1452,12 +1514,7 @@ if train_bt is not None and true_bt is not None and mbt_preds:
 
     bh_pk = np.maximum.accumulate(bh_curve)
     bh_dd = (bh_curve - bh_pk) / (bh_pk + 1e-12) * 100
-    fig_dd.add_hline(y=float(np.mean(bh_dd)),
-                     line=dict(color="#aaa", dash="dash", width=1),
-                     annotation_text=f"BH Mean DD: {np.mean(bh_dd):.1f}%")
-    fig_dd.add_hline(y=float(np.median(bh_dd)),
-                     line=dict(color="#888", dash="dot", width=1),
-                     annotation_text=f"BH Median DD: {np.median(bh_dd):.1f}%")
+    # BH mean/median DD lines removed for clarity
 
     for mn, ec in all_ec.items():
         eq = ec["equity"]
