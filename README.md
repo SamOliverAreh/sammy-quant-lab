@@ -9,7 +9,8 @@
 
 A production-grade quantitative finance platform for **FX time series forecasting**, combining classical econometrics with modern deep learning. Built as a portfolio project demonstrating end-to-end data science skills in financial markets.
 
-🌐 **[Live Demo →](https://sammy-quant-lab.streamlit.app/)**
+🌐 **[Live Overview](https://samoliverareh.github.io/sammy-quant-lab/)**
+🌐 **[Live Dashboard](https://sammy-quant-lab.streamlit.app/)**
 
 ---
 
