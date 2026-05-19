@@ -120,7 +120,7 @@ def stacked_ensemble_forecast(
     series: pd.Series,
     steps: int = 30,
     n_splits: int = 3,
-    min_train: int = 200,
+    min_train: int = 60,
     exog=None,
     meta_method: str = "auto",   # "auto" = pick best by OOS MSE, or specify name
 ):
@@ -134,7 +134,9 @@ def stacked_ensemble_forecast(
         best_meta   (str — name of selected meta-learner)
     """
     n         = len(series)
-    fold_size = max(steps, (n - min_train) // (n_splits + 1))
+    # Clamp min_train so we always have at least one fold
+    min_train = min(min_train, max(20, n - steps * (n_splits + 1)))
+    fold_size = max(steps, (n - min_train) // max(1, n_splits + 1))
     fold_starts = [min_train + i * fold_size for i in range(n_splits)]
 
     meta_X_rows, meta_y_rows = [], []
@@ -143,9 +145,13 @@ def stacked_ensemble_forecast(
             break
         tr    = series.iloc[:fs]
         ex_tr = exog.iloc[:fs] if exog is not None else None
+        y_fold = series.iloc[fs: fs + steps].values
+        # Only keep fold if y has exactly `steps` samples
+        if len(y_fold) < steps:
+            break
         row   = [_pad(fn(tr, steps, ex_tr), steps) for fn in BASE_MODELS.values()]
-        meta_X_rows.append(np.stack(row, axis=1))
-        meta_y_rows.append(series.iloc[fs: fs + steps].values)
+        meta_X_rows.append(np.stack(row, axis=1))   # (steps, n_models)
+        meta_y_rows.append(y_fold)                   # (steps,)
 
     # Generate final base predictions on full series
     base_preds = {}
