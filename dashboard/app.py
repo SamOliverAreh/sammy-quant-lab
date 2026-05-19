@@ -234,6 +234,14 @@ def get_css(dark):
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;600;700;800&display=swap');
 html,body,[class*="css"],.main,.stApp{{font-family:'Outfit',sans-serif!important;background:{B}!important;color:{TX}!important;}}
 .main .block-container{{background:{B}!important;padding-top:1.2rem!important;}}
+/* Force all text elements to themed colour */
+p,span,div,li,td,th,label,small,caption{{color:{TX}!important;}}
+/* Streamlit specific overrides */
+.stMarkdown p,.stMarkdown span,.stMarkdown div{{color:{TX}!important;}}
+.stCaption,.stCaption p{{color:{MU}!important;}}
+div[data-testid="stMarkdownContainer"] p{{color:{TX}!important;}}
+div[data-testid="stMarkdownContainer"] li{{color:{TX}!important;}}
+div[data-testid="stMarkdownContainer"] small{{color:{MU}!important;}}
 section[data-testid="stSidebar"]{{background:{S1}!important;border-right:1px solid {BD}!important;}}
 section[data-testid="stSidebar"] *{{color:{TX}!important;}}
 section[data-testid="stSidebar"] p,
@@ -321,14 +329,23 @@ div[data-testid="stDateInput"] input{{background:{IB}!important;color:{TX}!impor
 div[data-testid="stMetric"]{{background:{IB}!important;border:1px solid {BD}!important;border-radius:10px!important;padding:13px!important;}}
 div[data-testid="stMetric"] label{{color:{MU}!important;}}
 div[data-testid="stMetric"] div[data-testid="stMetricValue"]{{color:{AC}!important;font-family:'DM Mono',monospace!important;}}
+/* ── DataFrame / table visibility (light + dark) ── */
 .stDataFrame,div[data-testid="stDataFrame"]{{background:{TB}!important;border:1px solid {BD}!important;border-radius:10px!important;overflow:hidden!important;}}
 .stDataFrame table,.stDataFrame th,.stDataFrame td{{background:{TB}!important;color:{TX}!important;border-color:{BD}!important;}}
 .stDataFrame thead tr th{{background:{TH}!important;color:{TX}!important;font-weight:600;}}
 .stDataFrame tbody tr:hover td{{background:{BD}!important;}}
-/* Streamlit DataFrame iframe — covers light mode inner table */
-[data-testid="stDataFrame"] iframe{{background:{TB}!important;}}
+/* Streamlit internal DataFrame iframe — force foreground colour for both modes */
+[data-testid="stDataFrame"] iframe{{background:{TB}!important;color-scheme:{"dark" if dark else "light"};}}
 [data-testid="stDataFrame"] .dvn-scroller{{background:{TB}!important;}}
-[data-testid="stDataFrame"] canvas{{filter:{"none" if dark else "invert(0)"};}}
+[data-testid="stDataFrame"] canvas{{filter:none;}}
+/* Arrow table (new Streamlit) — cell text, header text */
+[data-testid="stDataFrame"] [data-testid="glideDataEditor"]{{background:{TB}!important;}}
+[data-testid="stDataFrame"] .dvn-stack [class*="cell"]{{color:{TX}!important;background:{TB}!important;}}
+[data-testid="stDataFrame"] .dvn-stack [class*="header"]{{color:{TX}!important;background:{TH}!important;}}
+/* Streamlit table element (st.table) */
+.stTable table{{background:{TB}!important;color:{TX}!important;border-color:{BD}!important;width:100%;}}
+.stTable th{{background:{TH}!important;color:{TX}!important;padding:8px 12px;}}
+.stTable td{{background:{TB}!important;color:{TX}!important;padding:6px 12px;border-color:{BD}!important;}}
 div[data-testid="stTabs"] button{{background:{"#090d1c" if dark else "#f0f4f8"}!important;color:{MU}!important;border-bottom:2px solid transparent!important;font-weight:600;}}
 div[data-testid="stTabs"] button[aria-selected="true"]{{background:{S1}!important;color:{AC}!important;border-bottom:2px solid {AC}!important;}}
 div[data-testid="stTabContent"]{{background:{B}!important;border:1px solid {BD}!important;border-top:none!important;border-radius:0 0 10px 10px!important;padding:12px!important;}}
@@ -394,41 +411,56 @@ with st.sidebar:
     start_date     = st.date_input("Start Date", value=pd.Timestamp("2021-01-01"))
     forecast_steps = st.slider("Forecast Horizon (days)", 5, 90, 30)
 
-    # Model selection — grouped dropdowns
+    # Model selection — single dropdown-style expander with grouped checkboxes
     st.markdown('<div class="sec-hdr">🤖 Model Selection</div>', unsafe_allow_html=True)
-    st.caption("Models grouped by category. Multi-select within each group.")
 
-    selected_models = []
+    # Defaults
+    _default_set = {"ARIMA", "ETS", "Random Forest"}
+
+    # Build available models list
+    _all_available = {}
     for grp, mods in MODEL_REGISTRY.items():
-        available = []
         for mn, meta in mods.items():
             req = meta.get("requires", "")
             if req == "prophet" and not PROPHET_AVAILABLE:
                 continue
             if req == "xgboost" and not XGB_AVAILABLE:
                 continue
-            if mn in ("Transformer",
-                      "Hybrid Transformer+LSTM") and not TRANSFORMER_AVAILABLE:
+            if mn in ("Transformer", "Hybrid Transformer+LSTM") and not TRANSFORMER_AVAILABLE:
                 continue
-            available.append(mn)
+            _all_available.setdefault(grp, []).append(mn)
 
-        if not available:
+    if "model_selection" not in st.session_state:
+        st.session_state.model_selection = {mn for mn in _default_set
+                                            if any(mn in v for v in _all_available.values())}
+
+    # Select All / Clear All buttons
+    _col_sa, _col_ca = st.columns(2)
+    with _col_sa:
+        if st.button("✅ All", use_container_width=True, key="sel_all_btn"):
+            st.session_state.model_selection = {mn for v in _all_available.values() for mn in v}
+            st.rerun()
+    with _col_ca:
+        if st.button("🗑 Clear", use_container_width=True, key="sel_clear_btn"):
+            st.session_state.model_selection = set()
+            st.rerun()
+
+    selected_models = []
+    for grp, avail in _all_available.items():
+        if not avail:
             continue
-
-        defaults = {
-            "Statistical":   ["ARIMA", "ETS"],
-            "Machine Learning": ["Random Forest"],
-            "Hybrid": [],
-            "Ensemble": [],
-        }.get(grp, [])
-
-        chosen = st.multiselect(
-            f"{grp}",
-            available,
-            default=[m for m in defaults if m in available],
-            key=f"grp_{grp}",
-        )
-        selected_models.extend(chosen)
+        st.caption(f"**{grp}**")
+        for mn in avail:
+            checked = st.checkbox(
+                mn,
+                value=(mn in st.session_state.model_selection),
+                key=f"chk_{mn}"
+            )
+            if checked:
+                selected_models.append(mn)
+                st.session_state.model_selection.add(mn)
+            else:
+                st.session_state.model_selection.discard(mn)
 
     # Multivariate
     st.markdown('<div class="sec-hdr">📐 Multivariate Mode</div>',
@@ -462,7 +494,7 @@ with st.sidebar:
     run_btn = st.button("🚀 Run Analysis", use_container_width=True)
 
     st.markdown(f"""
-    <div style="text-align:center;margin-top:14px;font-size:.71rem;color:{'#2a4060' if DARK else '#5a7090'};">
+    <div style="text-align:center;margin-top:14px;font-size:.71rem;color:{'#5a7090' if DARK else '#2a4060'};">
       <b style="color:{'#00d4ff' if DARK else '#0055cc'};">Sammy Oliver Areh</b><br>
       MSc Statistics · Time Series Research<br>
       <a href="https://github.com/SamOliverAreh" style="color:{'#0070f3' if DARK else '#0050c0'};">GitHub</a> ·
@@ -634,12 +666,13 @@ def kpi(val, lbl, delta=None, small=False):
     if delta is not None:
         cls = "pos" if delta >= 0 else "neg"
         dh  = f'<div class="metric-delta {cls}">{delta:+.3f}%</div>'
-    sz  = "font-size:.85rem;" if small else ""
-    return (f'<div class="metric-card"><div class="metric-val" style="{sz}">{val}</div>'
+    sz  = "font-size:.82rem;" if small else ""
+    return (f'<div class="metric-card" style="min-height:84px;max-height:100px;overflow:hidden;">'
+            f'<div class="metric-val" style="{sz}">{val}</div>'
             f'<div class="metric-lbl">{lbl}</div>{dh}</div>')
 
 c1, c2, c3, c4, c5, c6, c7 = st.columns(7)
-with c1: st.markdown(kpi(f"{cp:.4f}", "Last Price", pchg),   unsafe_allow_html=True)
+with c1: st.markdown(kpi(f"{cp:.4f}", "Last Price", pchg, small=True), unsafe_allow_html=True)
 with c2: st.markdown(kpi(f"{annr:.2f}%", "Ann. Return"),     unsafe_allow_html=True)
 with c3: st.markdown(kpi(f"{vol30:.2f}%", "Ann. Vol (30d)"), unsafe_allow_html=True)
 with c4: st.markdown(kpi(f"{sr:.2f}", "Sharpe Ratio"),       unsafe_allow_html=True)
@@ -907,16 +940,60 @@ if use_mv:
                     <div class="ic-winner">
                       <div class="ic-winner-title">
                         PCA: {pca_meta['n_components']} components retained
-                        (from {pca_meta['n_features_in']} features)
+                        (from {pca_meta['n_features_in']} features entering PCA pool)
                       </div>
                       <div class="ic-winner-sub">
                         Cumulative explained variance:
                         <b>{pca_meta['cumulative_variance']*100:.1f}%</b>
                         (target: {pca_var*100:.0f}%)
-                        · Features in pool: {', '.join(feature_pool[:8])}
-                        {'…' if len(feature_pool) > 8 else ''}
                       </div>
                     </div>""", unsafe_allow_html=True)
+
+                    # — Table 1: All features entering PCA and their selection source —
+                    granger_sig_set = set(granger_df[granger_df["Significant"]]["feature"].tolist()) if granger_df is not None else set()
+                    corr_sig_set    = set(corr_df[corr_df["Selected"]]["feature"].tolist()) if corr_df is not None else set()
+                    pool_rows = []
+                    for feat in feature_pool:
+                        sources = []
+                        if feat in granger_sig_set:
+                            sources.append("Granger Causality")
+                        if feat in corr_sig_set:
+                            sources.append("Correlation")
+                        corr_val = float(corr_df[corr_df["feature"] == feat]["correlation"].values[0]) if (corr_df is not None and feat in corr_df["feature"].values) else None
+                        g_row    = granger_df[granger_df["feature"] == feat] if granger_df is not None else None
+                        p_val    = float(g_row["p-value"].values[0]) if (g_row is not None and len(g_row)) else None
+                        pool_rows.append({
+                            "Feature":         feat,
+                            "Selected By":     " + ".join(sources) if sources else "Correlation",
+                            "Granger p-value": f"{p_val:.4f}" if p_val is not None else "—",
+                            "Corr w/ target":  f"{corr_val:+.4f}" if corr_val is not None else "—",
+                        })
+                    st.markdown("**🔍 Features Entering PCA Pool**")
+                    st.caption(f"Total: {len(feature_pool)} features selected by Granger causality (p < {g_alpha}) and/or correlation (|r| > {c_thr})")
+                    st.dataframe(pd.DataFrame(pool_rows), use_container_width=True, hide_index=True)
+
+                    # — Table 2: Retained components with variance explained —
+                    comp_rows = []
+                    for i in range(pca_meta['n_components']):
+                        ind_var = pca_meta['all_ev_ratios'][i] * 100
+                        cum_var_i = pca_meta['all_cum_ev'][i] * 100
+                        comp_rows.append({
+                            "Component":              f"PC{i+1}",
+                            "Individual Var (%)":     f"{ind_var:.2f}%",
+                            "Cumulative Var (%)":     f"{cum_var_i:.2f}%",
+                            "Retained":               "✅ Yes",
+                        })
+                    # Also show first dropped component for reference
+                    if pca_meta['n_components'] < len(pca_meta['all_ev_ratios']):
+                        nc = pca_meta['n_components']
+                        comp_rows.append({
+                            "Component":              f"PC{nc+1} (first excluded)",
+                            "Individual Var (%)":     f"{pca_meta['all_ev_ratios'][nc]*100:.2f}%",
+                            "Cumulative Var (%)":     f"{pca_meta['all_cum_ev'][nc]*100:.2f}%",
+                            "Retained":               "❌ No",
+                        })
+                    st.markdown(f"**📊 Retained Components (target ≥ {pca_var*100:.0f}% cumulative variance)**")
+                    st.dataframe(pd.DataFrame(comp_rows), use_container_width=True, hide_index=True)
 
                     # Scree plot
                     all_ev = pca_meta["all_ev_ratios"]
@@ -937,7 +1014,8 @@ if use_mv:
                                      line=dict(color="#00e676", dash="dash", width=1),
                                      annotation_text=f"Target {pca_var*100:.0f}%")
                     fig_sc.update_layout(
-                        **PLOT_LAYOUT, height=300,
+                        **{k: v for k, v in PLOT_LAYOUT.items() if k not in ("yaxis",)},
+                        height=300,
                         title=dict(text="PCA Scree Plot — Explained Variance", font=dict(size=14)),
                         yaxis=dict(title="Var %", gridcolor="#0e1e35" if DARK else "#d0dde8"),
                         yaxis2=dict(title="Cumulative %", overlaying="y", side="right"),
@@ -1035,9 +1113,18 @@ exog_bt  = (exog_df.iloc[-tw - forecast_steps: -forecast_steps]
             if (exog_df is not None and tw >= 20) else None)
 
 prog = st.progress(0)
+_model_seed_map = {mn: idx * 7 + 42 for idx, mn in enumerate(selected_models)}
 for i, mn in enumerate(selected_models):
     prog.progress((i + 1) / len(selected_models), text=f"Training {mn}...")
     ex = exog_df   # None = univariate; DataFrame = multivariate PCA components
+    # Set unique seed per model so hybrid sub-models don't produce identical outputs
+    import torch
+    _seed = _model_seed_map[mn]
+    np.random.seed(_seed)
+    try:
+        torch.manual_seed(_seed)
+    except Exception:
+        pass
 
     try:
         # ── Statistical ───────────────────────────────────────────────────────
@@ -1133,24 +1220,58 @@ for i, mn in enumerate(selected_models):
 
         # ── Hybrids ───────────────────────────────────────────────────────────
         elif mn == "Hybrid ARIMA+LSTM":
-            fc, _, _, _ = arima_lstm_fc(s_lr_model, steps=forecast_steps, exog=ex)
-            mforecasts[mn] = fc; minsample[mn] = (np.zeros(5), np.zeros(5))
+            fc, arima_part, lstm_part, order = arima_lstm_fc(s_lr_model, steps=forecast_steps, exog=ex)
+            mforecasts[mn] = fc
+            # Compute combined in-sample: refit ARIMA+LSTM residual on full series
+            try:
+                from statsmodels.tsa.arima.model import ARIMA as _ARIMAF
+                _af = _ARIMAF(s_lr_model, order=order).fit()
+                _ar_ins = np.array(_af.fittedvalues)
+                _resid  = pd.Series(np.array(_af.resid), index=s_lr_model.index).dropna()
+                from models.ml.lstm import train_lstm as _tl
+                _lm, _lsy, _lsx, _, _l_ins, _l_act = _tl(_resid, epochs=20, exog=ex)
+                _n = min(len(_ar_ins), len(s_lr_model))
+                _combined_ins = _ar_ins[-_n:] + np.pad(_l_ins, (max(0, _n - len(_l_ins)), 0), mode="edge")[-_n:]
+                minsample[mn] = (_combined_ins[-250:], s_lr_model.values[-250:])
+            except Exception:
+                minsample[mn] = (np.zeros(5), np.zeros(5))
             if train_bt is not None:
                 bt, _, _, _ = arima_lstm_fc(train_bt, steps=forecast_steps, exog=exog_bt)
                 mbt_preds[mn] = bt
 
         elif mn == "Hybrid ETS+GRU":
-            fc, _, _ = ets_gru_fc(s_lr_model, steps=forecast_steps, exog=ex)
-            mforecasts[mn] = fc; minsample[mn] = (np.zeros(5), np.zeros(5))
+            fc, ets_part, gru_part = ets_gru_fc(s_lr_model, steps=forecast_steps, exog=ex)
+            mforecasts[mn] = fc
+            # Build combined in-sample: ETS fitted + GRU residual fitted
+            try:
+                from statsmodels.tsa.holtwinters import ExponentialSmoothing as _ETS
+                _em = _ETS(s_lr_model, trend="add", damped_trend=True,
+                           initialization_method="estimated").fit(optimized=True)
+                _ets_fit  = np.array(_em.fittedvalues)
+                _resid_s  = pd.Series(s_lr_model.values - _ets_fit, index=s_lr_model.index).dropna()
+                from models.ml.gru import train_gru as _tg
+                _gm, _gsy, _gsx, _, _g_ins, _ = _tg(_resid_s, epochs=20, exog=ex)
+                _n = min(len(_ets_fit), len(s_lr_model))
+                _combined = _ets_fit[-_n:] + np.pad(_g_ins, (max(0, _n - len(_g_ins)), 0), mode="edge")[-_n:]
+                minsample[mn] = (_combined[-250:], s_lr_model.values[-250:])
+            except Exception:
+                minsample[mn] = (np.zeros(5), np.zeros(5))
             if train_bt is not None:
                 bt, _, _ = ets_gru_fc(train_bt, steps=forecast_steps, exog=exog_bt)
                 mbt_preds[mn] = bt
 
         elif mn == "Hybrid LSTM+GRU":
-            fc, _, _ = lstm_gru_forecast(
+            fc, lstm_part, gru_residual = lstm_gru_forecast(
                 s_lr_model, steps=forecast_steps,
                 epochs=dl_epochs, hidden=dl_hidden, window=dl_window, exog=ex)
-            mforecasts[mn] = fc; minsample[mn] = (np.zeros(5), np.zeros(5))
+            mforecasts[mn] = fc
+            # Get in-sample from LSTM sub-model
+            try:
+                _lm, _lsy, _lsx, _, _l_ins, _l_act = train_lstm(
+                    s_lr_model, window=dl_window, epochs=dl_epochs, hidden=dl_hidden, exog=ex)
+                minsample[mn] = (_l_ins[-250:], _l_act[-250:])
+            except Exception:
+                minsample[mn] = (np.zeros(5), np.zeros(5))
             if train_bt is not None:
                 bt, _, _ = lstm_gru_forecast(
                     train_bt, steps=forecast_steps,
@@ -1161,7 +1282,14 @@ for i, mn in enumerate(selected_models):
             fc, _, _ = transformer_lstm_forecast(
                 s_lr_model, steps=forecast_steps,
                 epochs=dl_epochs, hidden=dl_hidden, window=dl_window, exog=ex)
-            mforecasts[mn] = fc; minsample[mn] = (np.zeros(5), np.zeros(5))
+            mforecasts[mn] = fc
+            # Use Transformer in-sample as proxy
+            try:
+                _tm, _tsy, _tsx, _, _t_ins, _t_act = train_transformer(
+                    s_lr_model, window=dl_window, epochs=dl_epochs, exog=ex)
+                minsample[mn] = (_t_ins[-250:], _t_act[-250:])
+            except Exception:
+                minsample[mn] = (np.zeros(5), np.zeros(5))
             if train_bt is not None:
                 bt, _, _ = transformer_lstm_forecast(
                     train_bt, steps=forecast_steps,
@@ -1172,7 +1300,13 @@ for i, mn in enumerate(selected_models):
             fc, _, _ = xgb_lstm_forecast(
                 s_lr_model, steps=forecast_steps,
                 epochs=dl_epochs, hidden=dl_hidden, window=dl_window, exog=ex)
-            mforecasts[mn] = fc; minsample[mn] = (np.zeros(5), np.zeros(5))
+            mforecasts[mn] = fc
+            # Use XGBoost in-sample as proxy
+            try:
+                _xm, _xl, _x_ins, _x_act = train_xgboost(s_lr_model, exog=ex)
+                minsample[mn] = (_x_ins[-250:], _x_act[-250:])
+            except Exception:
+                minsample[mn] = (np.zeros(5), np.zeros(5))
             if train_bt is not None:
                 bt, _, _ = xgb_lstm_forecast(
                     train_bt, steps=forecast_steps,
@@ -1180,10 +1314,18 @@ for i, mn in enumerate(selected_models):
                 mbt_preds[mn] = bt
 
         elif mn == "Hybrid ARIMA-GARCH-LSTM":
-            fc, _, _, _, _ = arima_garch_lstm_forecast(
+            fc, arima_fc_part, garch_part, lstm_part, order_agl = arima_garch_lstm_forecast(
                 s_lr_model, steps=forecast_steps,
                 epochs=dl_epochs, hidden=dl_hidden, window=dl_window, exog=ex)
-            mforecasts[mn] = fc; minsample[mn] = (np.zeros(5), np.zeros(5))
+            mforecasts[mn] = fc
+            # Use ARIMA in-sample as proxy
+            try:
+                from statsmodels.tsa.arima.model import ARIMA as _ARIMAAGL
+                _af2 = _ARIMAAGL(s_lr_model, order=order_agl).fit()
+                _ar_ins2 = np.array(_af2.fittedvalues)
+                minsample[mn] = (_ar_ins2[-250:], s_lr_model.values[-250:])
+            except Exception:
+                minsample[mn] = (np.zeros(5), np.zeros(5))
             if train_bt is not None:
                 bt, _, _, _, _ = arima_garch_lstm_forecast(
                     train_bt, steps=forecast_steps,
@@ -1231,9 +1373,10 @@ valid_ins = {k: v for k, v in minsample.items()
 if valid_ins:
     fig_ins = go.Figure()
     act_ref = list(valid_ins.values())[0][1]
+    _ins_actual_color = "#e0eaf5" if DARK else "#111111"
     fig_ins.add_trace(go.Scatter(
         y=act_ref, name="Actual Log-Returns",
-        line=dict(color="#ffffff" if DARK else "#222222", width=1.5)))
+        line=dict(color=_ins_actual_color, width=1.5)))
     for mn, (ip, ia) in valid_ins.items():
         n = min(len(ip), len(ia))
         fig_ins.add_trace(go.Scatter(
@@ -1268,7 +1411,7 @@ with t_lr_fc:
     hn  = min(60, len(s_lr_model))
     flr.add_trace(go.Scatter(
         x=s_lr_model.index[-hn:], y=s_lr_model.values[-hn:],
-        name="Historical", line=dict(color="#ffffff" if DARK else "#333", width=1),
+        name="Historical", line=dict(color="#e0eaf5" if DARK else "#444444", width=1),
         opacity=0.45))
     flr.add_hline(y=0, line=dict(color="#607080", width=1, dash="dot"))
     for mn, fc in mforecasts.items():
@@ -1287,7 +1430,7 @@ with t_px_fc:
     fpx.add_trace(go.Scatter(
         x=s_price.index[-hn:], y=s_price.values[-hn:],
         name="Historical Price",
-        line=dict(color="#ffffff" if DARK else "#333", width=1.5)))
+        line=dict(color="#e0eaf5" if DARK else "#333333", width=1.5)))
     for mn, fc in mforecasts.items():
         px_fc = logret_to_price(fc, last_px)
         n     = min(len(fc_dates), len(px_fc))
@@ -1340,9 +1483,10 @@ else:
     rw_pred = random_walk_insample_with_tail(train_tail_val, true_bt.values)
 
     fig_bt = go.Figure()
+    _actual_color = "#e0eaf5" if DARK else "#111111"
     fig_bt.add_trace(go.Scatter(
         y=true_bt.values, name="Actual",
-        line=dict(color="#ffffff" if DARK else "#111", width=2)))
+        line=dict(color=_actual_color, width=2)))
     fig_bt.add_trace(go.Scatter(
         y=rw_pred, name="Random Walk",
         line=dict(color=MODEL_COLORS["Random Walk"], width=1.5, dash="dot")))
